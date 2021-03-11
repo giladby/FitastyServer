@@ -9,9 +9,13 @@ class MySQLConnectionFields:
 
 def get_db_fields():
     host = "3.142.151.208"
+    host = "127.0.0.1"
     user = "admin"
+    user = "root"
     password = "epsilonEP2"
+    password = "123456"
     database = "fitasty"
+    database = "trivia_questions"
     return MySQLConnectionFields(host, user, password, database)
 
 def get_mysql_connection(mysql_fields):
