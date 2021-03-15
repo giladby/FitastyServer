@@ -10,6 +10,7 @@ password_field_json = 'password'
 username_field_mysql = 'username'
 password_field_mysql = 'password'
 users_table_mysql = 'users'
+port = 8080
 
 class MySQLConnectionFields:
     def __init__(self, host, user, password, database):
@@ -19,6 +20,11 @@ class MySQLConnectionFields:
         self.database = database
 
 class Server(BaseHTTPRequestHandler):
+    def __init__(self, request, client_address, server):
+        self.operations_dict_get = self.set_operations_dict_get()
+        self.operations_dict_post = self.set_operations_dict_post()
+        super().__init__(request, client_address, server)
+
     def _set_headers(self):
         self.send_response(HTTPStatus.OK.value)
         self.send_header('Content-type', 'application/json')
@@ -27,9 +33,14 @@ class Server(BaseHTTPRequestHandler):
     def do_HEAD(self):
         self._set_headers()
 
-    # GET checks if the user exist in system
-    def do_GET(self):
-        print("in get")
+    def set_operations_dict_get(self):
+        return {"/users": self.users_get}
+
+    def set_operations_dict_post(self):
+        return {"/users": self.users_post}
+
+    def users_get(self):
+        print("in users get")
         error = True
         result = None
 
@@ -37,18 +48,17 @@ class Server(BaseHTTPRequestHandler):
         if username_field_json in qs and password_field_json in qs:
             username = qs[username_field_json][0]
             password = qs[password_field_json][0]
-            result, error = check_user(username, password)
+            result, error = check_user(username, True, password)
         if not error:
             self._set_headers()
-            json_string = json.dumps({'found': str(result)})
+            json_string = json.dumps({'found': result})
             self.wfile.write(json_string.encode(encoding='utf_8'))
         else:
             self.send_response(HTTPStatus.BAD_REQUEST.value)
             self.end_headers()
 
-    # POST creates user in system
-    def do_POST(self):
-        print("in post")
+    def users_post(self):
+        print("in users post")
         error = True
         content = self.headers.get('content-type')
 
@@ -68,7 +78,7 @@ class Server(BaseHTTPRequestHandler):
             if data and password_field_json in data and username_field_json in data:
                 username = data[username_field_json]
                 password = data[password_field_json]
-                found, error = check_user(username, password)
+                found, error = check_user(username, False, None)
                 if not error and not found:
                     error = insert_user(username, password)
 
@@ -77,15 +87,35 @@ class Server(BaseHTTPRequestHandler):
         self.send_response(status)
         self.end_headers()
 
+    def operate_by_operations_dict(self, operations_dict):
+        sub = urlparse(self.path).path
+        if sub in operations_dict:
+            operations_dict.get(sub)()
+        else:
+            self.send_response(HTTPStatus.BAD_REQUEST.value)
+            self.end_headers()
+
+    # GET checks if the user exist in system
+    def do_GET(self):
+        print("in get")
+        operations = self.operations_dict_get
+        self.operate_by_operations_dict(operations)
+
+    # POST creates user in system
+    def do_POST(self):
+        print("in post")
+        operations = self.operations_dict_post
+        self.operate_by_operations_dict(operations)
+
 def get_db_fields():
-    host = "3.142.151.208"
+    host = "fitasty-db.cc4qtocqbg7k.us-east-2.rds.amazonaws.com"
     host = "127.0.0.1"
     user = "admin"
     user = "root"
     password = "epsilonEP2"
     password = "123456"
     database = "fitasty"
-    database = "trivia_questions"
+    database = "fitasty_demo"
     return MySQLConnectionFields(host, user, password, database)
 
 def get_mysql_connection(mysql_fields):
@@ -110,13 +140,15 @@ def iter_row(cursor, size=10):
 def handle_error():
     print("Error trying access mysql records")
 
-def get_query(cursor, username, password):
+def get_user_query(cursor, username, check_password, password):
     found = False
     error = True
     if cursor:
         try:
-            cursor.execute(f"SELECT * FROM {users_table_mysql} WHERE "
-                           f"{username_field_mysql}='{username}' AND {password_field_mysql}='{password}'")
+            query = f"SELECT * FROM {users_table_mysql} WHERE {username_field_mysql}='{username}'"
+            if check_password:
+                query += f" AND {password_field_mysql}='{password}'"
+            cursor.execute(query)
             if cursor.fetchone():
                 found = True
             error = False
@@ -124,7 +156,7 @@ def get_query(cursor, username, password):
             handle_error()
     return found, error
 
-def insert_query(conn, cursor, username, password):
+def insert_user_query(conn, cursor, username, password):
     error = False
     if cursor:
         try:
@@ -157,24 +189,24 @@ def get_mysql_cursor():
        error = True
     return conn, cursor, error
 
-def check_user(username, password):
+def check_user(username, check_user, password):
     conn, cursor, error = get_mysql_cursor()
     result = None
     if not error:
-        result, error = get_query(cursor, username, password)
+        result, error = get_user_query(cursor, username, check_user, password)
     close_connection(conn, cursor)
     return result, error
 
 def insert_user(username, password):
     conn, cursor, error = get_mysql_cursor()
     if not error:
-        error = insert_query(conn, cursor, username, password)
+        error = insert_user_query(conn, cursor, username, password)
     close_connection(conn, cursor)
     return error
 
-def run(server_class=HTTPServer, handler_class=Server, port=8008):
+def run():
     server_address = ('', port)
-    httpd = server_class(server_address, handler_class)
+    httpd = HTTPServer(server_address, Server)
 
     print(f"Starting httpd on port {port}...")
     httpd.serve_forever()
