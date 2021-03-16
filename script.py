@@ -22,7 +22,6 @@ def get_amount(filter, string, liquid):
     string = string.split(filter)[0]
     if "(" in string:
         parts = string.split("(")
-        error = False
         amount = parts[len(parts) - 1]
         error, amount = is_float(amount)
         if liquid:
@@ -112,12 +111,15 @@ for url in urls:
     if error:
         continue
 
-    rowsString.append((food, "0" if liquid else "1", fat, carbs, fiber, protein))
+    rowsString.append((food, "1" if liquid else "0", fat, carbs, fiber, protein, "0", "0", "0", "0"))
 
 with open("foods.csv", mode='w', newline='', encoding='utf-8') as csv_file:
-    fieldnames = ["NAME","LIQUID", "FAT", "CARBS", "FIBER", "PROTEIN"]
+    fieldnames = ["name","liquid", "fat", "carbs", "fiber", "protein", "vegan", "vegetarian", "gluten-free",
+                  "lactose-free"]
     writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
 
     writer.writeheader()
     for row in rowsString:
-        writer.writerow({"NAME": row[0], "LIQUID": row[1], "FAT": row[2], "CARBS": row[3], "FIBER": row[4], "PROTEIN": row[5]})
+        writer.writerow({"name": row[0], "liquid": row[1], "fat": row[2], "carbs": row[3], "fiber": row[4],
+                         "protein": row[5], "vegan": row[6], "vegetarian": row[7], "gluten-free": row[8],
+                         "lactose-free": row[9]})

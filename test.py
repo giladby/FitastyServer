@@ -34,18 +34,36 @@ class Server(BaseHTTPRequestHandler):
         self._set_headers()
 
     def set_operations_dict_get(self):
-        return {"/users": self.users_get}
+        return {"/users/log_in": self.log_in,
+                "/users/check_username": self.check_username}
 
     def set_operations_dict_post(self):
-        return {"/users": self.users_post}
+        return {"/users/insert_account": self.insert_account}
 
-    def users_get(self):
-        print("in users get")
+    def check_username(self):
+        print("in check_username")
         error = True
         result = None
 
         qs = parse_qs(urlparse(self.path).query)
-        if username_field_json in qs and password_field_json in qs:
+        if username_field_json in qs and len(qs) == 1:
+            username = qs[username_field_json][0]
+            result, error = check_user(username, False, None)
+        if not error:
+            self._set_headers()
+            json_string = json.dumps({'username_exist': result})
+            self.wfile.write(json_string.encode(encoding='utf_8'))
+        else:
+            self.send_response(HTTPStatus.BAD_REQUEST.value)
+            self.end_headers()
+
+    def log_in(self):
+        print("in log_in")
+        error = True
+        result = None
+
+        qs = parse_qs(urlparse(self.path).query)
+        if username_field_json in qs and password_field_json in qs and len(qs) == 2:
             username = qs[username_field_json][0]
             password = qs[password_field_json][0]
             result, error = check_user(username, True, password)
@@ -57,8 +75,8 @@ class Server(BaseHTTPRequestHandler):
             self.send_response(HTTPStatus.BAD_REQUEST.value)
             self.end_headers()
 
-    def users_post(self):
-        print("in users post")
+    def insert_account(self):
+        print("in insert_account")
         error = True
         content = self.headers.get('content-type')
 
@@ -75,17 +93,20 @@ class Server(BaseHTTPRequestHandler):
             data_string = self.rfile.read(length).decode('utf-8')
             data = json.loads(data_string) if data_string else None
 
-            if data and password_field_json in data and username_field_json in data:
+            if data and password_field_json in data and username_field_json in data and len(data) == 2:
                 username = data[username_field_json]
                 password = data[password_field_json]
                 found, error = check_user(username, False, None)
                 if not error and not found:
                     error = insert_user(username, password)
+                if not error:
+                    self._set_headers()
+                    json_string = json.dumps({'username_exist': found})
+                    self.wfile.write(json_string.encode(encoding='utf_8'))
 
-        status = HTTPStatus.BAD_REQUEST.value if error else HTTPStatus.OK.value
-
-        self.send_response(status)
-        self.end_headers()
+        if error:
+            self.send_response(HTTPStatus.BAD_REQUEST.value)
+            self.end_headers()
 
     def operate_by_operations_dict(self, operations_dict):
         sub = urlparse(self.path).path
