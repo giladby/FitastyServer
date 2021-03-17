@@ -111,7 +111,7 @@ for url in urls:
     if error:
         continue
 
-    rowsString.append((food, "1" if liquid else "0", fat, carbs, fiber, protein, "0", "0", "0", "0"))
+    rowsString.append((food, "1" if liquid else "0", fat, carbs, fiber, protein, "1", "1", "1", "1"))
 
 with open("foods.csv", mode='w', newline='', encoding='utf-8') as csv_file:
     fieldnames = ["name","liquid", "fat", "carbs", "fiber", "protein", "vegan", "vegetarian", "gluten-free",
