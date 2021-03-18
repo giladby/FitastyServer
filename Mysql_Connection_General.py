@@ -1,4 +1,5 @@
 import mysql.connector
+from Macros import *
 
 class MySQLConnectionFields:
     def __init__(self, host, user, password, database):
@@ -38,15 +39,7 @@ def iter_row(cursor, size=10):
             yield row
 
 def get_db_fields():
-    host = "fitasty-db.cc4qtocqbg7k.us-east-2.rds.amazonaws.com"
-    host = "127.0.0.1"
-    user = "admin"
-    user = "root"
-    password = "epsilonEP2"
-    password = "123456"
-    database = "fitasty"
-    database = "fitasty_demo"
-    return MySQLConnectionFields(host, user, password, database)
+    return MySQLConnectionFields(mysql_host, mysql_user, mysql_password, mysql_database)
 
 def get_mysql_connection(mysql_fields):
     return mysql.connector.connect(
@@ -54,3 +47,25 @@ def get_mysql_connection(mysql_fields):
         user=mysql_fields.user,
         passwd=mysql_fields.password,
         database=mysql_fields.database)
+
+def mysql_insertion_action(conn, cursor, query, val):
+    error = False
+    if cursor:
+        try:
+            cursor.execute(query, val)
+            conn.commit()
+        except:
+            error = True
+    return error
+
+def mysql_getting_single_action(cursor, query):
+    result = None
+    error = False
+    if cursor:
+        try:
+            cursor.execute(query)
+            result = cursor.fetchone()
+        except:
+            error = True
+    return error, result
+

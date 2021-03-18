@@ -17,13 +17,21 @@ class Server(BaseHTTPRequestHandler):
 
     def set_operations_dict_get(self):
         return {"/users/log_in": self.log_in,
-                "/users/check_username": self.check_username}
+                "/users/check_username": self.check_username,
+                "/users/get_account_info": self.get_account_info}
 
     def set_operations_dict_post(self):
-        return {"/users/insert_account": self.insert_account}
+        return {"/users/insert_account": self.insert_account,
+                "/users/update_account": self.update_account}
+
+    def get_account_info(self):
+        server_get_account_info(self)
 
     def check_username(self):
         server_check_username(self)
+
+    def update_account(self):
+        server_update_account(self)
 
     def log_in(self):
         server_log_in(self)
@@ -36,8 +44,7 @@ class Server(BaseHTTPRequestHandler):
         if sub in operations_dict:
             operations_dict.get(sub)()
         else:
-            self.send_response(HTTPStatus.BAD_REQUEST.value)
-            self.end_headers()
+            send_error(self, HTTPStatus.BAD_REQUEST.value)
 
     # GET checks if the user exist in system
     def do_GET(self):
