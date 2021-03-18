@@ -1,0 +1,166 @@
+http://3.142.151.208:8080
+
+==================================================================================================================================================================
+
+POST
+
+.../users/insert_account
+
+	input:
+		{
+			"username" : (str)
+			"password" : (str)
+			"age" : (int)
+            "is_male" : (boolean)
+            "height" : (int)
+            "weight" : (int)
+            "activity_factor" : (double)
+            "diet_type" : [{ "carb" : (double), "fat" : (double), "protein" : (double)}]
+            "weight_goal" : (double)
+		}
+	output:
+		fail -> status "bad_request"(400)
+		success -> status "OK"(200)	+ { "username_exist" : (boolean) }
+
+==================================================================================================================================================================
+
+GET
+
+.../users/get_account_info?username=(str)
+
+	input: None
+    output:
+		fail -> status "bad_request"(400)
+        not found -> status "not found"(404)
+		success -> status "OK"(200)	+
+        {
+			"password" : (str)
+			"age" : (int)
+            "is_male" : (boolean)
+            "height" : (int)
+            "weight" : (int)
+            "activity_factor" : (double)
+            "diet_type" : [{ "carb" : (double), "fat" : (double), "protein" : (double)}]
+            "weight_goal" : (double)
+		}
+
+==================================================================================================================================================================
+
+POST
+
+.../users/update_account
+
+	input:
+    {
+			"prev_username" : (str)
+            "username" : (str)
+			"password" : (str)
+			"age" : (int)
+            "is_male" : (boolean)
+            "height" : (int)
+            "weight" : (int)
+            "activity_factor" : (double)
+            "diet_type" : [{ "carb" : (double), "fat" : (double), "protein" : (double)}]
+            "weight_goal" : (double)
+	}
+	output:
+		fail -> status "bad_request"(400)
+        not found -> status "not found"(404)
+		success -> status "OK"(200)	+ { "username_exist" : (boolean) }
+
+==================================================================================================================================================================
+
+GET
+
+.../users/check_username?username=(str)
+
+	input: None
+	output:
+		fail -> status "bad_request"(400)
+		success -> status "OK"(200)	+ { "username_exist" : (boolean) }
+
+==================================================================================================================================================================
+
+GET
+
+.../users/log_in?username=(str)&password=(str)
+
+	input: None
+	output:
+		fail -> status "bad_request"(400)
+		success -> status "OK"(200)	+ { "found" : (boolean) }
+
+==================================================================================================================================================================
+
+POST
+
+.../food/insert_ingrident
+
+	input:
+		{
+			"name" : (str)
+			"liquid" : (boolean)
+			"fat" : (double)
+			"carbs" : (double)
+			"fiber" : (double)
+			"protein" : (double)
+			"vegan" : (boolean)
+			"vegetarian" : (boolean)
+			"gluten-free" : (boolean)
+			"lactose-free" : (boolean)
+		}
+	output:
+		fail -> status "bad_request"(400)
+		success -> status "OK"(200)	+ { "name_exist" : (boolean) }
+
+==================================================================================================================================================================
+
+POST
+
+.../food/insert_dish
+
+	input:
+		{
+			"name" : (str)
+			"ingridents" : [
+				{ "name" : (str), "measure_type" : (str), "amount" : (double)},
+				..
+			]
+		}
+	output:
+		fail -> status "bad_request"(400)
+		success -> status "OK"(200)	+ { "name_exist" : (boolean) }
+
+==================================================================================================================================================================
+
+GET
+
+.../food/get_ingridents?include_dish=(boolean)
+
+	input:
+		{
+			"name_begin" : (str)
+			"vegan" : (boolean)
+			"vegetarian" : (boolean)
+			"gluten-free" : (boolean)
+			"lactose-free" : (boolean)
+		}
+	output:
+		fail -> status "bad_request"(400)
+		success -> status "OK"(200)	+
+        {
+            "ingridents" : [
+				{
+                "name" : (str)
+                "liquid" : (boolean)
+                }
+				..
+			]
+        }
+
+==================================================================================================================================================================
+
+insert new menu
+get menus titles (only name)
+get detailed menu by name (and username)
+get recommendations
