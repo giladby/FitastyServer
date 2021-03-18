@@ -11,16 +11,19 @@ POST
 			"username" : (str)
 			"password" : (str)
 			"age" : (int)
-            "is_male" : (boolean)
-            "height" : (int)
-            "weight" : (int)
-            "activity_factor" : (double)
-            "diet_type" : [{ "carb" : (double), "fat" : (double), "protein" : (double)}]
-            "weight_goal" : (double)
+			"is_male" : (boolean)
+			"height" : (int)
+			"weight" : (int)
+			"activity_factor" : (double)
+			"diet_type" : [{ "carb" : (double), "fat" : (double), "protein" : (double)}]
+			"weight_goal" : (double)
 		}
 	output:
 		fail -> status "bad_request"(400)
-		success -> status "OK"(200)	+ { "username_exist" : (boolean) }
+		success -> status "OK"(200)	+ 
+			{ 
+				"username_exist" : (boolean)
+			}
 
 ==================================================================================================================================================================
 
@@ -29,44 +32,45 @@ GET
 .../users/get_account_info?username=(str)
 
 	input: None
-    output:
+	output:
 		fail -> status "bad_request"(400)
-        not found -> status "not found"(404)
+		not found -> status "not found"(404)
 		success -> status "OK"(200)	+
-        {
-			"password" : (str)
-			"age" : (int)
-            "is_male" : (boolean)
-            "height" : (int)
-            "weight" : (int)
-            "activity_factor" : (double)
-            "diet_type" : [{ "carb" : (double), "fat" : (double), "protein" : (double)}]
-            "weight_goal" : (double)
-		}
+			{
+				"password" : (str)
+				"age" : (int)
+				"is_male" : (boolean)
+				"height" : (int)
+				"weight" : (int)
+				"activity_factor" : (double)
+				"diet_type" : [{ "carb" : (double), "fat" : (double), "protein" : (double)}]
+				"weight_goal" : (double)
+			}
 
 ==================================================================================================================================================================
 
 POST
 
-.../users/update_account
+.../users/update_account?prev_username=(str)
 
 	input:
-    {
-			"prev_username" : (str)
-            "username" : (str)
+		{
+			"username" : (str)
 			"password" : (str)
 			"age" : (int)
-            "is_male" : (boolean)
-            "height" : (int)
-            "weight" : (int)
-            "activity_factor" : (double)
-            "diet_type" : [{ "carb" : (double), "fat" : (double), "protein" : (double)}]
-            "weight_goal" : (double)
+			"is_male" : (boolean)
+			"height" : (int)
+			"weight" : (int)
+			"activity_factor" : (double)
+			"diet_type" : [{ "carb" : (double), "fat" : (double), "protein" : (double)}]
+			"weight_goal" : (double)
 	}
 	output:
 		fail -> status "bad_request"(400)
-        not found -> status "not found"(404)
-		success -> status "OK"(200)	+ { "username_exist" : (boolean) }
+		success -> status "OK"(200)	+
+		{
+			"username_exist" : (boolean)
+		}
 
 ==================================================================================================================================================================
 
@@ -77,7 +81,10 @@ GET
 	input: None
 	output:
 		fail -> status "bad_request"(400)
-		success -> status "OK"(200)	+ { "username_exist" : (boolean) }
+		success -> status "OK"(200)	+
+		{
+			"username_exist" : (boolean)
+		}
 
 ==================================================================================================================================================================
 
@@ -88,7 +95,10 @@ GET
 	input: None
 	output:
 		fail -> status "bad_request"(400)
-		success -> status "OK"(200)	+ { "found" : (boolean) }
+		success -> status "OK"(200)	+
+		{
+			"found" : (boolean)
+		}
 
 ==================================================================================================================================================================
 
@@ -111,7 +121,10 @@ POST
 		}
 	output:
 		fail -> status "bad_request"(400)
-		success -> status "OK"(200)	+ { "name_exist" : (boolean) }
+		success -> status "OK"(200)	+
+		{
+			"name_exist" : (boolean) 
+		}
 
 ==================================================================================================================================================================
 
@@ -123,13 +136,16 @@ POST
 		{
 			"name" : (str)
 			"ingridents" : [
-				{ "name" : (str), "measure_type" : (str), "amount" : (double)},
-				..
+				{"name" : (str), "measure_type" : (str), "amount" : (double)},
+				...
 			]
 		}
 	output:
 		fail -> status "bad_request"(400)
-		success -> status "OK"(200)	+ { "name_exist" : (boolean) }
+		success -> status "OK"(200)	+
+		{
+			"name_exist" : (boolean)
+		}
 
 ==================================================================================================================================================================
 
@@ -148,15 +164,12 @@ GET
 	output:
 		fail -> status "bad_request"(400)
 		success -> status "OK"(200)	+
-        {
-            "ingridents" : [
-				{
-                "name" : (str)
-                "liquid" : (boolean)
-                }
-				..
-			]
-        }
+			{
+				"ingridents" : [
+					{"name" : (str), "liquid" : (boolean)}
+					...
+				]
+			}
 
 ==================================================================================================================================================================
 
