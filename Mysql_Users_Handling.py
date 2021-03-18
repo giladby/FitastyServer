@@ -4,7 +4,7 @@ from Macros import *
 def make_account_info_dict(mysql_user_record):
     return {f"{password_field_param}": mysql_user_record[password_field_mysql_position],
             f"{age_field_param}": mysql_user_record[age_field_mysql_position],
-            f"{is_male_field_param}": mysql_user_record[is_male_field_mysql_position],
+            f"{is_male_field_param}": mysql_user_record[is_male_field_mysql_position] == 1,
             f"{height_field_param}": mysql_user_record[height_field_mysql_position],
             f"{weight_field_param}": mysql_user_record[weight_field_mysql_position],
             f"{activity_factor_field_param}": mysql_user_record[activity_factor_field_mysql_position],
