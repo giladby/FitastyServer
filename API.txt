@@ -15,7 +15,7 @@ POST
 			"height" : (int)
 			"weight" : (int)
 			"activity_factor" : (double)
-			"diet_type" : [{ "carb" : (double), "fat" : (double), "protein" : (double)}]
+			"diet_type" : {"carb" : (double), "fat" : (double), "protein" : (double)}
 			"weight_goal" : (double)
 		}
 	output:
@@ -43,7 +43,7 @@ GET
 				"height" : (int)
 				"weight" : (int)
 				"activity_factor" : (double)
-				"diet_type" : [{ "carb" : (double), "fat" : (double), "protein" : (double)}]
+				"diet_type" : {"carb" : (double), "fat" : (double), "protein" : (double)}
 				"weight_goal" : (double)
 			}
 
@@ -62,7 +62,7 @@ POST
 			"height" : (int)
 			"weight" : (int)
 			"activity_factor" : (double)
-			"diet_type" : [{ "carb" : (double), "fat" : (double), "protein" : (double)}]
+			"diet_type" : {"carb" : (double), "fat" : (double), "protein" : (double)}
 			"weight_goal" : (double)
 	}
 	output:
