@@ -1,5 +1,6 @@
 from Mysql_Connection_General import *
 from Macros import *
+from Utils import *
 
 def make_account_info_dict(mysql_user_record):
     return {f"{password_field_param}": mysql_user_record[password_field_mysql_position],
@@ -20,7 +21,7 @@ def get_account_info_query(cursor, username):
     found = False
     query = f"SELECT * FROM {users_table_mysql} WHERE {username_field_mysql}='{username}'"
 
-    error, result = mysql_getting_single_action(cursor, query)
+    error, result = mysql_getting_action(cursor, query, True)
     if not error and result:
         found = True
         result = make_account_info_dict(result)
@@ -33,7 +34,7 @@ def check_user_query(cursor, username, check_password, password):
     if check_password:
         query += f" AND {password_field_mysql}='{password}'"
 
-    error, result = mysql_getting_single_action(cursor, query)
+    error, result = mysql_getting_action(cursor, query, True)
     if result:
         found = True
 
@@ -47,7 +48,7 @@ def insert_user_query(conn, cursor, username, password, age, is_male, height,
             f" {diet_type_fat_field_mysql}, {diet_type_carb_field_mysql}," \
             f" {diet_type_protein_field_mysql}, {weight_goal_field_mysql}) VALUES" \
             f" (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
-    val = (username, password, age, 1 if is_male else 0, height, weight, activity_factor,
+    val = (username, password, age, convert_boolean_to_number(is_male), height, weight, activity_factor,
            diet_type[diet_type_fat_field_param], diet_type[diet_type_carb_field_param],
            diet_type[diet_type_protein_field_param], weight_goal)
 

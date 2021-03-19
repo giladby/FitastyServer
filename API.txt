@@ -104,7 +104,7 @@ GET
 
 POST
 
-.../food/insert_ingrident
+.../food/insert_ingredient
 
 	input:
 		{
@@ -135,7 +135,7 @@ POST
 	input:
 		{
 			"name" : (str)
-			"ingridents" : [
+			"ingredients" : [
 				{"name" : (str), "measure_type" : (str), "amount" : (double)},
 				...
 			]
@@ -151,7 +151,7 @@ POST
 
 GET
 
-.../food/get_ingridents?include_dish=(boolean)
+.../food/get_ingredients?include_dish=(boolean)
 
 	input:
 		{
@@ -165,7 +165,7 @@ GET
 		fail -> status "bad_request"(400)
 		success -> status "OK"(200)	+
 			{
-				"ingridents" : [
+				"ingredients" : [
 					{"name" : (str), "liquid" : (boolean)}
 					...
 				]

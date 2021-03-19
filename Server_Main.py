@@ -1,5 +1,6 @@
 from http.server import BaseHTTPRequestHandler
 from Server_Users_Handling import *
+from Server_Food_Handling import *
 
 class Server(BaseHTTPRequestHandler):
     def __init__(self, request, client_address, server):
@@ -18,11 +19,23 @@ class Server(BaseHTTPRequestHandler):
     def set_operations_dict_get(self):
         return {"/users/log_in": self.log_in,
                 "/users/check_username": self.check_username,
-                "/users/get_account_info": self.get_account_info}
+                "/users/get_account_info": self.get_account_info,
+                "/food/get_ingredients": self.get_ingredients}
 
     def set_operations_dict_post(self):
         return {"/users/insert_account": self.insert_account,
-                "/users/update_account": self.update_account}
+                "/users/update_account": self.update_account,
+                "/food/insert_ingredient": self.insert_ingredient,
+                "/food/insert_dish": self.insert_dish}
+
+    def insert_dish(self):
+        server_insert_dish(self)
+
+    def get_ingredients(self):
+        server_get_ingredients(self)
+
+    def insert_ingredient(self):
+        server_insert_ingredient(self)
 
     def get_account_info(self):
         server_get_account_info(self)

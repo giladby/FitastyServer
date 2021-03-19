@@ -26,18 +26,6 @@ def get_mysql_cursor():
        error = True
     return conn, cursor, error
 
-def iter_row(cursor, size=10):
-    #running example:
-    #cursor.execute("SELECT * FROM users")
-    #    for row in iter_row(cursor, 10):
-    #        print(row)
-    while True:
-        rows = cursor.fetchmany(size)
-        if not rows:
-            break
-        for row in rows:
-            yield row
-
 def get_db_fields():
     return MySQLConnectionFields(mysql_host, mysql_user, mysql_password, mysql_database)
 
@@ -46,25 +34,43 @@ def get_mysql_connection(mysql_fields):
         host=mysql_fields.host,
         user=mysql_fields.user,
         passwd=mysql_fields.password,
-        database=mysql_fields.database)
+        database=mysql_fields.database,
+        autocommit=True)
 
 def mysql_insertion_action(conn, cursor, query, val):
     error = False
     if cursor:
         try:
             cursor.execute(query, val)
-            conn.commit()
         except:
             error = True
     return error
 
-def mysql_getting_single_action(cursor, query):
+def mysql_multiple_insertion_action(conn, cursor, actions_arr):
+    error = False
+    if cursor:
+        try:
+            conn.start_transaction()
+            for action in actions_arr:
+                query = action[0]
+                val = action[1]
+                cursor.execute(query, val)
+            conn.commit()
+        except:
+            conn.rollback()
+            error = True
+    return error
+
+def mysql_getting_action(cursor, query, single):
     result = None
     error = False
     if cursor:
         try:
             cursor.execute(query)
-            result = cursor.fetchone()
+            if single:
+                result = cursor.fetchone()
+            else:
+                result = cursor.fetchall()
         except:
             error = True
     return error, result
