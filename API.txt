@@ -130,12 +130,17 @@ GET
 		not found -> status "not found"(404)
 		success -> status "OK"(200)	+
 			{
-			    "fat" : (double),
-				"carb" : (double),
-				"fiber" : (double),
-				"protein" : (double),
-				"serving" : (double),
-				"is_liquid" : (boolean)
+			    "name" : (str)
+			    "is_liquid" : (boolean)
+			    "fat" : (double)
+			    "carb" : (double)
+			    "fiber" : (double)
+			    "protein" : (double)
+			    "is_vegan" : (boolean)
+			    "is_vegetarian" : (boolean)
+			    "is_gluten-free" : (boolean)
+			    "is_lactose-free" : (boolean)
+			    "serving" : (double)
 			}
 
 ==================================================================================================================================================================
