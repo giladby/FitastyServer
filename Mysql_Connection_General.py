@@ -37,7 +37,7 @@ def get_mysql_connection(mysql_fields):
         database=mysql_fields.database,
         autocommit=True)
 
-def mysql_insertion_action(conn, cursor, query, val):
+def mysql_insertion_action(cursor, query, val):
     error = False
     if cursor:
         try:
@@ -75,3 +75,19 @@ def mysql_getting_action(cursor, query, single):
             error = True
     return error, result
 
+def check_query(cursor, checking_query):
+    found = False
+
+    error, result = mysql_getting_action(cursor, checking_query, True)
+    if result:
+        found = True
+
+    return found, error
+
+def check_existing(checking_query):
+    conn, cursor, error = get_mysql_cursor()
+    result = None
+    if not error:
+        result, error = check_query(cursor, checking_query)
+    close_connection(conn, cursor)
+    return result, error

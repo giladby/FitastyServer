@@ -22,7 +22,7 @@ POST
 		fail -> status "bad_request"(400)
 		success -> status "OK"(200)	+ 
 			{ 
-				"username_exist" : (boolean)
+				"name_exist" : (boolean)
 			}
 
 ==================================================================================================================================================================
@@ -87,7 +87,7 @@ POST
 		fail -> status "bad_request"(400)
 		success -> status "OK"(200)	+
 		{
-			"username_exist" : (boolean)
+			"name_exist" : (boolean)
 		}
 
 ==================================================================================================================================================================
@@ -101,7 +101,7 @@ GET
 		fail -> status "bad_request"(400)
 		success -> status "OK"(200)	+
 		{
-			"username_exist" : (boolean)
+			"name_exist" : (boolean)
 		}
 
 ==================================================================================================================================================================
@@ -138,8 +138,8 @@ GET
 			    "protein" : (double)
 			    "is_vegan" : (boolean)
 			    "is_vegetarian" : (boolean)
-			    "is_gluten-free" : (boolean)
-			    "is_lactose-free" : (boolean)
+			    "is_gluten_free" : (boolean)
+			    "is_lactose_free" : (boolean)
 			    "serving" : (double)
 			}
 
@@ -147,7 +147,7 @@ GET
 
 GET
 
-.../foods/get_dish_info?name=(str)
+.../foods/get_dish_info?dish_name=(str)
 
 	input: None
 	output:
@@ -155,13 +155,13 @@ GET
 		not found -> status "not found"(404)
 		success -> status "OK"(200)	+
 			{
+			    "dish_name" : (str),
 			    "fat" : (double),
 				"carb" : (double),
 				"fiber" : (double),
 				"protein" : (double),
-				"is_liquid" : (boolean),
 				"ingredients" : [
-				    {"name" : (str), "is_liquid": (boolean) "amount" : (str)}
+				    {"ingredient_name" : (str), "is_liquid": (boolean), "amount" : (double)}
 				]
 			}
 
@@ -173,7 +173,7 @@ POST
 
 	input:
 		{
-			"name" : (str)
+			"ingredient_name" : (str)
 			"is_liquid" : (boolean)
 			"fat" : (double)
 			"carb" : (double)
@@ -181,8 +181,8 @@ POST
 			"protein" : (double)
 			"is_vegan" : (boolean)
 			"is_vegetarian" : (boolean)
-			"is_gluten-free" : (boolean)
-			"is_lactose-free" : (boolean)
+			"is_gluten_free" : (boolean)
+			"is_lactose_free" : (boolean)
 			"serving" : (double)
 		}
 	output:
@@ -200,9 +200,9 @@ POST
 
 	input:
 		{
-			"name" : (str)
+			"dish_name" : (str)
 			"ingredients" : [
-				{"name" : (str), "amount" : (int)},
+				{"ingredient_name" : (str), "amount" : (double)},
 				...
 			]
 			"dishes" : [
@@ -239,8 +239,8 @@ GET
 			**** True = search for dishes/ingredients which are vegan/.., False = do not filter vegan/.. dishes **
 			"is_vegan" : (boolean)
 			"is_vegetarian" : (boolean)
-			"is_gluten-free" : (boolean)
-			"is_lactose-free" : (boolean)
+			"is_gluten_free" : (boolean)
+			"is_lactose_free" : (boolean)
 			******************************************************************************************************
 		}
 	output:
@@ -248,11 +248,11 @@ GET
 		success -> status "OK"(200)	+
 			{
 				"dishes" : [
-					{"name" : (str), "is_liquid" : (boolean)},
+					{"dish_name" : (str)},
 					...
 				]
 				"ingredients" : [
-				    {"name" : (str), "is_liquid" : (boolean)},
+				    {"ingredient_name" : (str), "is_liquid" : (boolean)},
 				    ...
 			    ]
 			}
