@@ -78,7 +78,7 @@ def insert_ingredient_query(cursor, name, is_liquid, fat, carbs, fiber, protein,
            convert_boolean_to_number(is_gluten_free),
            convert_boolean_to_number(is_lactose_free), serving)
 
-    return mysql_insertion_action(cursor, query, val)
+    return mysql_single_action(cursor, query, val)
 
 def get_filtered_foods_query(cursor, begin_name,max_fat, max_carb, max_fiber,
                              max_protein, min_fat, min_carb, min_fiber,
@@ -155,7 +155,7 @@ def insert_dish_query(conn, cursor, dish_name, ingredients_amount_dict):
         val = (dish_name, ingredient, amount)
         insertion_arr.append((query, val))
 
-    return mysql_multiple_insertion_action(conn, cursor, insertion_arr)
+    return mysql_multiple_action(conn, cursor, insertion_arr)
 
 def add_ingredient_amount(ingredients_amount_dict, ingredient, amount):
     curr_amount = 0

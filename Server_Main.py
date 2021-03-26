@@ -26,6 +26,7 @@ class Server(BaseHTTPRequestHandler):
 
     def set_operations_dict_post(self):
         return {"/users/insert_account": self.insert_account,
+                "/users/delete_account": self.delete_account,
                 "/users/update_account": self.update_account,
                 "/foods/insert_ingredient": self.insert_ingredient,
                 "/foods/insert_dish": self.insert_dish}
@@ -56,6 +57,9 @@ class Server(BaseHTTPRequestHandler):
 
     def log_in(self):
         server_log_in(self)
+
+    def delete_account(self):
+        server_delete_account(self)
 
     def insert_account(self):
         server_insert_account(self)

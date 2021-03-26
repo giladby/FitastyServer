@@ -28,6 +28,12 @@ def get_account_info_query(cursor, username):
 
     return error, found, result
 
+def delete_user_query(cursor, username):
+    query = f"DELETE FROM {users_table_mysql} WHERE {username_field_mysql} = %s"
+    val = (username, )
+
+    return mysql_single_action(cursor, query, val)
+
 def insert_user_query(cursor, username, password, age, is_male, height,
                       weight, activity_factor, diet_type, weight_goal):
     query = f"INSERT INTO {users_table_mysql} ({username_field_mysql}," \
@@ -40,7 +46,7 @@ def insert_user_query(cursor, username, password, age, is_male, height,
            diet_type[diet_type_fat_field_param], diet_type[diet_type_carb_field_param],
            diet_type[diet_type_protein_field_param], weight_goal)
 
-    return mysql_insertion_action(cursor, query, val)
+    return mysql_single_action(cursor, query, val)
 
 def update_user_query(cursor, prev_username, username, password, age, is_male,
                       height, weight, activity_factor, diet_type, weight_goal):
@@ -55,7 +61,7 @@ def update_user_query(cursor, prev_username, username, password, age, is_male,
            diet_type[diet_type_fat_field_param], diet_type[diet_type_carb_field_param],
            diet_type[diet_type_protein_field_param], weight_goal)
 
-    return mysql_insertion_action(cursor, query, val)
+    return mysql_single_action(cursor, query, val)
 
 def update_user(prev_username, username, password, age, is_male, height, weight,
                 activity_factor, diet_type, weight_goal):
@@ -82,6 +88,13 @@ def insert_user(username, password, age, is_male, height, weight,
         error = insert_user_query(cursor, username, password, age,
                                   is_male, height, weight, activity_factor,
                                   diet_type, weight_goal)
+    close_connection(conn, cursor)
+    return error
+
+def delete_user(username):
+    conn, cursor, error = get_mysql_cursor()
+    if not error:
+        error = delete_user_query(cursor, username)
     close_connection(conn, cursor)
     return error
 

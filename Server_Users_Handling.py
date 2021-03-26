@@ -63,6 +63,31 @@ def insert_update_user_by_data(data, insert, prev_username):
 
     return error
 
+def server_delete_account(server):
+    print("in delete_account")
+    found = False
+    error = True
+    username = None
+    code = HTTPStatus.OK
+
+    qs = parse_qs(urlparse(server.path).query)
+    if username_field_param in qs and len(qs) == 1:
+        error = False
+
+    if not error:
+        username = qs[username_field_param][0]
+        found, error = check_user(username, False, None)
+
+    if not error and found:
+        error = delete_user(username)
+
+    if error:
+        code = HTTPStatus.BAD_REQUEST
+    elif not found:
+        code = HTTPStatus.NOT_FOUND
+
+    send_error(server, code.value)
+
 def server_insert_account(server):
     print("in insert_account")
     found = False
