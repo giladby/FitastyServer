@@ -21,7 +21,7 @@ def get_mysql_cursor():
     try:
         db_fields = get_db_fields()
         conn = get_mysql_connection(db_fields)
-        cursor = conn.cursor()
+        cursor = conn.cursor(dictionary=True)
     except:
        error = True
     return conn, cursor, error

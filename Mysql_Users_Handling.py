@@ -3,19 +3,19 @@ from Macros import *
 from Utils import *
 
 def make_account_info_dict(mysql_user_record):
-    return {f"{password_field_param}": mysql_user_record[password_field_mysql_position],
-            f"{age_field_param}": mysql_user_record[age_field_mysql_position],
-            f"{is_male_field_param}": mysql_user_record[is_male_field_mysql_position] == 1,
-            f"{height_field_param}": mysql_user_record[height_field_mysql_position],
-            f"{weight_field_param}": mysql_user_record[weight_field_mysql_position],
-            f"{activity_factor_field_param}": mysql_user_record[activity_factor_field_mysql_position],
-            f"{diet_type_field_param}": {f"{diet_type_carb_field_param}":
-                                             mysql_user_record[diet_type_carb_field_mysql_position],
-                                         f"{diet_type_fat_field_param}":
-                                             mysql_user_record[diet_type_fat_field_mysql_position],
+    return {f"{password_field_param}": mysql_user_record[password_field_mysql],
+            f"{age_field_param}": mysql_user_record[age_field_mysql],
+            f"{is_male_field_param}": mysql_user_record[is_male_field_mysql] == 1,
+            f"{height_field_param}": mysql_user_record[height_field_mysql],
+            f"{weight_field_param}": mysql_user_record[weight_field_mysql],
+            f"{activity_factor_field_param}": mysql_user_record[activity_factor_field_mysql],
+            f"{diet_type_field_param}": {f"{diet_type_fat_field_param}":
+                                             mysql_user_record[diet_type_fat_field_mysql],
+                                         f"{diet_type_carb_field_param}":
+                                             mysql_user_record[diet_type_carb_field_mysql],
                                          f"{diet_type_protein_field_param}":
-                                             mysql_user_record[diet_type_protein_field_mysql_position]},
-            f"{weight_goal_field_param}": mysql_user_record[weight_goal_field_mysql_position]}
+                                             mysql_user_record[diet_type_protein_field_mysql]},
+            f"{weight_goal_field_param}": mysql_user_record[weight_goal_field_mysql]}
 
 def get_account_info_query(cursor, username):
     found = False

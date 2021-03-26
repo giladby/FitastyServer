@@ -21,13 +21,17 @@ class Server(BaseHTTPRequestHandler):
                 "/users/check_username": self.check_username,
                 "/users/get_account_info": self.get_account_info,
                 "/food/get_foods": self.get_foods,
-                "/foods/get_ingredient_info": self.get_ingredient_info}
+                "/foods/get_ingredient_info": self.get_ingredient_info,
+                "/foods/get_dish_info": self.get_dish_info}
 
     def set_operations_dict_post(self):
         return {"/users/insert_account": self.insert_account,
                 "/users/update_account": self.update_account,
-                "/food/insert_ingredient": self.insert_ingredient,
-                "/food/insert_dish": self.insert_dish}
+                "/foods/insert_ingredient": self.insert_ingredient,
+                "/foods/insert_dish": self.insert_dish}
+
+    def get_dish_info(self):
+        server_get_dish_info(self)
 
     def insert_dish(self):
         server_insert_dish(self)

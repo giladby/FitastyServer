@@ -14,7 +14,7 @@ def server_check_username(server):
         username = qs[username_field_param][0]
         result, error = check_user(username, False, None)
     if not error:
-        send_json(server, {'username_exist': result})
+        send_json(server, {name_exist_field_param: result})
     else:
         send_error(server, HTTPStatus.BAD_REQUEST.value)
 
@@ -29,7 +29,7 @@ def server_log_in(server):
         password = qs[password_field_param][0]
         result, error = check_user(username, True, password)
     if not error:
-        send_json(server, {'found': result})
+        send_json(server, {found_field_param: result})
     else:
         send_error(server, HTTPStatus.BAD_REQUEST.value)
 
@@ -80,7 +80,7 @@ def server_insert_account(server):
         error = insert_update_user_by_data(data, True, None)
 
     if not error:
-        send_json(server, {'username_exist': found})
+        send_json(server, {name_exist_field_param: found})
     else:
         send_error(server, HTTPStatus.BAD_REQUEST.value)
 
@@ -127,7 +127,7 @@ def server_update_account(server):
         error = insert_update_user_by_data(data, False, prev_username)
 
     if not error:
-        send_json(server, {'username_exist': found})
+        send_json(server, {name_exist_field_param: found})
     else:
         send_error(server, HTTPStatus.BAD_REQUEST.value)
 
