@@ -63,10 +63,8 @@ min_carb_field_param = 'min_carb'
 min_fiber_field_param = 'min_fiber'
 min_protein_field_param = 'min_protein'
 serving_size_field_param = 'serving'
-include_dish_field_param = 'include_dish'
-include_dish_positive_param_val = 'True'
-include_ingredient_field_param = 'include_ingredient'
-include_ingredient_positive_param_val = 'True'
+include_dish_field_param = 'include_dishes'
+include_ingredient_field_param = 'include_ingredients'
 ingredients_field_param = 'ingredients'
 
 # Mysql :

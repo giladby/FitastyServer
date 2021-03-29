@@ -80,24 +80,129 @@ def insert_ingredient_query(cursor, name, is_liquid, fat, carbs, fiber, protein,
 
     return mysql_single_action(cursor, query, val)
 
-def get_filtered_foods_query(cursor, begin_name,max_fat, max_carb, max_fiber,
-                             max_protein, min_fat, min_carb, min_fiber,
-                             min_protein, is_vegan, is_vegetarian,
-                             is_lactose_free, is_gluten_free, include_dish, include_ingredient):
-    return ""
+def get_filtered_dishes_query(cursor, begin_name, max_fat, max_carb, max_fiber,
+                              max_protein, min_fat, min_carb, min_fiber,
+                              min_protein, is_vegan, is_vegetarian,
+                              is_lactose_free, is_gluten_free):
+    query = f"SELECT {dish_name_field_mysql}, SUM(fat) as sum_fat, SUM(carb) as sum_carb," \
+            f" SUM(fiber) as sum_fiber, SUM(protein) as sum_protein, BIT_AND(vegan) as bit_vegan," \
+            f" BIT_AND(vegetarian) as bit_vegetarian, BIT_AND(gluten_free) as bit_gluten," \
+            f" BIT_AND(lactose_free) as bit_lactose" \
+            f" FROM (SELECT {dish_name_field_mysql}, {fat_field_mysql}, {carb_field_mysql}, {fiber_field_mysql}," \
+                     f" {protein_field_mysql}, {is_vegan_field_mysql}, {is_vegetarian_field_mysql}," \
+                     f" {is_lactose_free_field_mysql}, {is_gluten_free_field_mysql}" \
+                     f" FROM {food_ingredients_table_mysql} JOIN {dish_ingredients_table_mysql}" \
+                     f" ON ({food_ingredients_table_mysql}.{ingredient_name_field_mysql} =" \
+                     f" {dish_ingredients_table_mysql}.{ingredient_name_field_mysql})) as joined_table" \
+            f" GROUP BY {dish_name_field_mysql}" \
+            f" HAVING {dish_name_field_mysql} LIKE '{begin_name}%'"
+    if max_fat is not None:
+        query += f" AND sum_fat <= {max_fat}"
+    if max_carb is not None:
+        query += f" AND sum_carb <= {max_carb}"
+    if max_fiber is not None:
+        query += f" AND sum_fiber <= {max_fiber}"
+    if max_protein is not None:
+        query += f" AND sum_protein <= {max_protein}"
+    if min_fat is not None:
+        query += f" AND sum_fat >= {min_fat}"
+    if min_carb is not None:
+        query += f" AND sum_carb >= {min_carb}"
+    if min_fiber is not None:
+        query += f" AND sum_fiber >= {min_fiber}"
+    if min_protein is not None:
+        query += f" AND sum_protein >= {min_protein}"
+    if is_vegan:
+        query += f" AND bit_vegan = 1"
+    if is_vegetarian:
+        query += f" AND bit_vegetarian = 1"
+    if is_lactose_free:
+        query += f" AND bit_lactose = 1"
+    if is_gluten_free:
+        query += f" AND bit_gluten = 1"
 
-def get_filtered_foods(begin_name,max_fat, max_carb, max_fiber,
+    error, dishes = mysql_getting_action(cursor, query, False)
+
+    return error, dishes
+
+def add_serving_prefix(string):
+    return f"serving_{string}"
+
+def convert_field_by_serving(field):
+    return f"{field}/100*serving as {add_serving_prefix(field)}"
+
+def get_filtered_ingredients_query(cursor, begin_name, max_fat, max_carb, max_fiber,
+                                   max_protein, min_fat, min_carb, min_fiber,
+                                   min_protein, is_vegan, is_vegetarian,
+                                   is_lactose_free, is_gluten_free):
+    query = f"SELECT {ingredient_name_field_mysql}, {is_liquid_field_mysql}," \
+            f" {convert_field_by_serving(fat_field_mysql)}," \
+            f" {convert_field_by_serving(carb_field_mysql)}, {convert_field_by_serving(fiber_field_mysql)}," \
+            f" {convert_field_by_serving(protein_field_mysql)} FROM {food_ingredients_table_mysql}" \
+            f" HAVING {ingredient_name_field_mysql} LIKE '{begin_name}%'"
+    if max_fat is not None:
+        query += f" AND {add_serving_prefix(fat_field_mysql)} <= {max_fat}"
+    if max_carb is not None:
+        query += f" AND {add_serving_prefix(carb_field_mysql)} <= {max_carb}"
+    if max_fiber is not None:
+        query += f" AND {add_serving_prefix(fiber_field_mysql)} <= {max_fiber}"
+    if max_protein is not None:
+        query += f" AND {add_serving_prefix(protein_field_mysql)} <= {max_protein}"
+    if min_fat is not None:
+        query += f" AND {add_serving_prefix(fat_field_mysql)} >= {min_fat}"
+    if min_carb is not None:
+        query += f" AND {add_serving_prefix(carb_field_mysql)} >= {min_carb}"
+    if min_fiber is not None:
+        query += f" AND {add_serving_prefix(fiber_field_mysql)} >= {min_fiber}"
+    if min_protein is not None:
+        query += f" AND {add_serving_prefix(protein_field_mysql)} >= {min_protein}"
+    if is_vegan:
+        query += f" AND {is_vegan_field_mysql} = 1"
+    if is_vegetarian:
+        query += f" AND {is_vegetarian_field_mysql} = 1"
+    if is_lactose_free:
+        query += f" AND {is_lactose_free_field_mysql} = 1"
+    if is_gluten_free:
+        query += f" AND {is_gluten_free} = 1"
+
+    error, ingredients = mysql_getting_action(cursor, query, False)
+
+    return error, ingredients
+
+def make_dict_result(dishes, ingredients):
+    dishes_arr = []
+    ingredients_arr = []
+
+    for dish in dishes:
+        dishes_arr.append({dish_name_field_param: dish[dish_name_field_mysql]})
+
+    for ingredient in ingredients:
+        ingredient_name = ingredient[ingredient_name_field_mysql]
+        is_liquid = ingredient[is_liquid_field_mysql]
+        ingredients_arr.append({ingredient_name_field_param: ingredient_name,
+                                is_liquid_field_param: is_liquid})
+
+    return {dishes_field_param: dishes_arr,
+            ingredients_field_param: ingredients_arr}
+
+def get_filtered_foods(begin_name, max_fat, max_carb, max_fiber,
                        max_protein, min_fat, min_carb, min_fiber,
                        min_protein, is_vegan, is_vegetarian,
                        is_lactose_free, is_gluten_free, include_dish, include_ingredient):
-    result = None
+    dishes = []
+    ingredients = []
     conn, cursor, error = get_mysql_cursor()
-    if not error:
-        error, result = get_filtered_foods_query(cursor, begin_name,max_fat, max_carb, max_fiber,
-                                                 max_protein, min_fat, min_carb, min_fiber,
-                                                 min_protein, is_vegan, is_vegetarian,
-                                                 is_lactose_free, is_gluten_free,
-                                                 include_dish, include_ingredient)
+    if not error and include_dish:
+        error, dishes = get_filtered_dishes_query(cursor, begin_name,max_fat, max_carb, max_fiber,
+                                                  max_protein, min_fat, min_carb, min_fiber,
+                                                  min_protein, is_vegan, is_vegetarian,
+                                                  is_lactose_free, is_gluten_free)
+    if not error and include_ingredient:
+        error, ingredients = get_filtered_ingredients_query(cursor, begin_name,max_fat, max_carb, max_fiber,
+                                                       max_protein, min_fat, min_carb, min_fiber,
+                                                       min_protein, is_vegan, is_vegetarian,
+                                                       is_lactose_free, is_gluten_free)
+    result = make_dict_result(dishes, ingredients)
     close_connection(conn, cursor)
     return error, result
 
@@ -168,14 +273,16 @@ def add_ingredient_amount(ingredients_amount_dict, ingredient, amount):
 
 def get_ingredients_amount_of_dish(cursor, dish_name, percent, ingredients_amount_dict):
     found = False
-    query = f"SELECT * FROM {dish_ingredients_table_mysql} WHERE {dish_name_field_mysql}='{dish_name}'"
+    query = f"SELECT {ingredient_name_field_mysql}," \
+            f"{ingredient_amount_field_mysql} * percent as {ingredient_amount_field_mysql}" \
+            f" FROM {dish_ingredients_table_mysql} WHERE {dish_name_field_mysql}='{dish_name}'"
 
     error, result = mysql_getting_action(cursor, query, False)
     if not error and result:
         found = True
         for row in result:
             ingredient = row[ingredient_name_field_mysql]
-            amount = row[ingredient_amount_field_mysql] * percent
+            amount = row[ingredient_amount_field_mysql]
             ingredients_amount_dict = \
                 add_ingredient_amount(ingredients_amount_dict, ingredient, amount)
 

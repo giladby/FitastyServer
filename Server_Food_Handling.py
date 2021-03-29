@@ -3,6 +3,7 @@ from urllib.parse import urlparse, parse_qs
 from Server_Utils import *
 from Macros import *
 from http import HTTPStatus
+from Utils import *
 
 def check_insert_dish_params(data):
     error = True
@@ -85,6 +86,12 @@ def server_get_foods(server):
         include_dish = qs[include_dish_field_param][0]
         include_ingredient = qs[include_ingredient_field_param][0]
         error = False
+        try:
+            include_dish = convert_str_to_boolean(include_dish)
+            include_ingredient = convert_str_to_boolean(include_ingredient)
+        except:
+            error = True
+
 
     if not error:
         error, data = read_json_convert_to_dictionary(server)

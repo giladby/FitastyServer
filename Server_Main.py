@@ -20,7 +20,7 @@ class Server(BaseHTTPRequestHandler):
         return {"/users/log_in": self.log_in,
                 "/users/check_username": self.check_username,
                 "/users/get_account_info": self.get_account_info,
-                "/food/get_foods": self.get_foods,
+                "/foods/get_foods": self.get_foods,
                 "/foods/get_ingredient_info": self.get_ingredient_info,
                 "/foods/get_dish_info": self.get_dish_info}
 

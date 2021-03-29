@@ -234,7 +234,7 @@ POST
 
 GET
 
-.../foods/get_foods?include_dish=(boolean)&include_ingredients(boolean)
+.../foods/get_foods?include_dishes=(boolean)&include_ingredients=(boolean)
 
 	input:
 		{
