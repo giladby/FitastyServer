@@ -6,6 +6,8 @@ class Server(BaseHTTPRequestHandler):
     def __init__(self, request, client_address, server):
         self.operations_dict_get = self.set_operations_dict_get()
         self.operations_dict_post = self.set_operations_dict_post()
+        self.operations_dict_delete = self.set_operations_dict_delete()
+        self.operations_dict_put = self.set_operations_dict_put()
         super().__init__(request, client_address, server)
 
     def _set_headers(self):
@@ -20,16 +22,20 @@ class Server(BaseHTTPRequestHandler):
         return {"/users/log_in": self.log_in,
                 "/users/check_username": self.check_username,
                 "/users/get_account_info": self.get_account_info,
-                "/foods/get_foods": self.get_foods,
                 "/foods/get_ingredient_info": self.get_ingredient_info,
                 "/foods/get_dish_info": self.get_dish_info}
 
     def set_operations_dict_post(self):
         return {"/users/insert_account": self.insert_account,
-                "/users/delete_account": self.delete_account,
-                "/users/update_account": self.update_account,
                 "/foods/insert_ingredient": self.insert_ingredient,
+                "/foods/get_foods": self.get_foods,
                 "/foods/insert_dish": self.insert_dish}
+
+    def set_operations_dict_delete(self):
+        return {"/users/delete_account": self.delete_account}
+
+    def set_operations_dict_put(self):
+        return {"/users/update_account": self.update_account}
 
     def get_dish_info(self):
         server_get_dish_info(self)
@@ -71,14 +77,22 @@ class Server(BaseHTTPRequestHandler):
         else:
             send_error(self, HTTPStatus.BAD_REQUEST.value)
 
-    # GET checks if the user exist in system
     def do_GET(self):
         print("in get")
         operations = self.operations_dict_get
         self.operate_by_operations_dict(operations)
 
-    # POST creates user in system
     def do_POST(self):
         print("in post")
         operations = self.operations_dict_post
+        self.operate_by_operations_dict(operations)
+
+    def do_PUT(self):
+        print("in put")
+        operations = self.operations_dict_put
+        self.operate_by_operations_dict(operations)
+
+    def do_DELETE(self):
+        print("in put")
+        operations = self.operations_dict_delete
         self.operate_by_operations_dict(operations)

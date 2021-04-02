@@ -84,10 +84,13 @@ def get_filtered_dishes_query(cursor, begin_name, max_fat, max_carb, max_fiber,
                               max_protein, min_fat, min_carb, min_fiber,
                               min_protein, is_vegan, is_vegetarian,
                               is_lactose_free, is_gluten_free):
-    query = f"SELECT {dish_name_field_mysql}, SUM(fat) as sum_fat, SUM(carb) as sum_carb," \
-            f" SUM(fiber) as sum_fiber, SUM(protein) as sum_protein, BIT_AND(vegan) as bit_vegan," \
-            f" BIT_AND(vegetarian) as bit_vegetarian, BIT_AND(gluten_free) as bit_gluten," \
-            f" BIT_AND(lactose_free) as bit_lactose" \
+    query = f"SELECT {dish_name_field_mysql}, SUM({fat_field_mysql}) as sum_fat," \
+            f" SUM({carb_field_mysql}) as sum_carb," \
+            f" SUM({fiber_field_mysql}) as sum_fiber, SUM({protein_field_mysql}) as sum_protein," \
+            f" BIT_AND({is_vegan_field_mysql}) as bit_vegan," \
+            f" BIT_AND({is_vegetarian_field_mysql}) as bit_vegetarian," \
+            f" BIT_AND({is_gluten_free_field_mysql}) as bit_gluten," \
+            f" BIT_AND({is_lactose_free_field_mysql}) as bit_lactose" \
             f" FROM (SELECT {dish_name_field_mysql}, {fat_field_mysql}, {carb_field_mysql}, {fiber_field_mysql}," \
                      f" {protein_field_mysql}, {is_vegan_field_mysql}, {is_vegetarian_field_mysql}," \
                      f" {is_lactose_free_field_mysql}, {is_gluten_free_field_mysql}" \
