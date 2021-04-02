@@ -1,6 +1,7 @@
 from http.server import BaseHTTPRequestHandler
 from Server_Users_Handling import *
 from Server_Food_Handling import *
+from Server_Demo import *
 
 class Server(BaseHTTPRequestHandler):
     def __init__(self, request, client_address, server):
@@ -29,7 +30,11 @@ class Server(BaseHTTPRequestHandler):
         return {"/users/insert_account": self.insert_account,
                 "/foods/insert_ingredient": self.insert_ingredient,
                 "/foods/get_foods": self.get_foods,
-                "/foods/insert_dish": self.insert_dish}
+                "/foods/insert_dish": self.insert_dish,
+                "/json_echo": self.json_echo}
+
+    def json_echo(self):
+        server_json_echo(self)
 
     def set_operations_dict_delete(self):
         return {"/users/delete_account": self.delete_account}
