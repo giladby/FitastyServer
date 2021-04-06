@@ -15,7 +15,7 @@ def make_dish_info_dict(dish_name, mysql_user_records):
         fiber += record[fiber_field_mysql]
         protein += record[protein_field_mysql]
         ingredient_list = {f"{ingredient_name_field_param}": record[ingredient_name_field_mysql],
-                           f"{is_liquid_field_param}": record[is_liquid_field_mysql],
+                           f"{is_liquid_field_param}": record[is_liquid_field_mysql] == 1,
                            f"{ingredient_amount_field_param}": record[ingredient_amount_field_mysql]}
         ingredients_arr.append(ingredient_list)
 
@@ -24,7 +24,7 @@ def make_dish_info_dict(dish_name, mysql_user_records):
             f"{carb_field_param}": carb,
             f"{fiber_field_param}": fiber,
             f"{protein_field_param}": protein,
-            f"{ingredient_name_field_param}": ingredients_arr}
+            f"{ingredients_field_param}": ingredients_arr}
 
 def get_dish_info_query(cursor, dish_name):
     found = False
@@ -99,30 +99,24 @@ def get_filtered_dishes_query(cursor, begin_name, max_fat, max_carb, max_fiber,
                      f" {dish_ingredients_table_mysql}.{ingredient_name_field_mysql})) as joined_table" \
             f" GROUP BY {dish_name_field_mysql}" \
             f" HAVING {dish_name_field_mysql} LIKE '{begin_name}%'"
-    if max_fat is not None:
-        query += f" AND sum_fat <= {max_fat}"
-    if max_carb is not None:
-        query += f" AND sum_carb <= {max_carb}"
-    if max_fiber is not None:
-        query += f" AND sum_fiber <= {max_fiber}"
-    if max_protein is not None:
-        query += f" AND sum_protein <= {max_protein}"
-    if min_fat is not None:
-        query += f" AND sum_fat >= {min_fat}"
-    if min_carb is not None:
-        query += f" AND sum_carb >= {min_carb}"
-    if min_fiber is not None:
-        query += f" AND sum_fiber >= {min_fiber}"
-    if min_protein is not None:
-        query += f" AND sum_protein >= {min_protein}"
-    if is_vegan:
-        query += f" AND bit_vegan = 1"
-    if is_vegetarian:
-        query += f" AND bit_vegetarian = 1"
-    if is_lactose_free:
-        query += f" AND bit_lactose = 1"
-    if is_gluten_free:
-        query += f" AND bit_gluten = 1"
+
+    check_none_arr = {"sum_fat": (max_fat, min_fat), "sum_carb": (max_carb, min_carb),
+                      "sum_fiber": (max_fiber, min_fiber), "sum_protein": (max_protein, min_protein)}
+    check_boolean_arr = {"bit_vegan": is_vegan, "bit_vegetarian": is_vegetarian,
+                         "bit_gluten": is_gluten_free, "bit_lactose": is_lactose_free}
+
+    for check_none in check_none_arr:
+        value_max = check_none_arr[check_none][0]
+        value_min = check_none_arr[check_none][1]
+        if value_max is not None:
+            query += f" AND {check_none} <= {value_max}"
+        if value_min is not None:
+            query += f" AND {check_none} >= {value_min}"
+
+    for check_boolean in check_boolean_arr:
+        boolean_value = check_boolean_arr[check_boolean]
+        if boolean_value:
+            query += f" AND {check_boolean} = 1"
 
     error, dishes = mysql_getting_action(cursor, query, False)
 
@@ -138,35 +132,37 @@ def get_filtered_ingredients_query(cursor, begin_name, max_fat, max_carb, max_fi
                                    max_protein, min_fat, min_carb, min_fiber,
                                    min_protein, is_vegan, is_vegetarian,
                                    is_lactose_free, is_gluten_free):
+
     query = f"SELECT {ingredient_name_field_mysql}, {is_liquid_field_mysql}," \
             f" {convert_field_by_serving(fat_field_mysql)}," \
             f" {convert_field_by_serving(carb_field_mysql)}, {convert_field_by_serving(fiber_field_mysql)}," \
             f" {convert_field_by_serving(protein_field_mysql)} FROM {food_ingredients_table_mysql}" \
-            f" HAVING {ingredient_name_field_mysql} LIKE '{begin_name}%'"
-    if max_fat is not None:
-        query += f" AND {add_serving_prefix(fat_field_mysql)} <= {max_fat}"
-    if max_carb is not None:
-        query += f" AND {add_serving_prefix(carb_field_mysql)} <= {max_carb}"
-    if max_fiber is not None:
-        query += f" AND {add_serving_prefix(fiber_field_mysql)} <= {max_fiber}"
-    if max_protein is not None:
-        query += f" AND {add_serving_prefix(protein_field_mysql)} <= {max_protein}"
-    if min_fat is not None:
-        query += f" AND {add_serving_prefix(fat_field_mysql)} >= {min_fat}"
-    if min_carb is not None:
-        query += f" AND {add_serving_prefix(carb_field_mysql)} >= {min_carb}"
-    if min_fiber is not None:
-        query += f" AND {add_serving_prefix(fiber_field_mysql)} >= {min_fiber}"
-    if min_protein is not None:
-        query += f" AND {add_serving_prefix(protein_field_mysql)} >= {min_protein}"
-    if is_vegan:
-        query += f" AND {is_vegan_field_mysql} = 1"
-    if is_vegetarian:
-        query += f" AND {is_vegetarian_field_mysql} = 1"
-    if is_lactose_free:
-        query += f" AND {is_lactose_free_field_mysql} = 1"
-    if is_gluten_free:
-        query += f" AND {is_gluten_free} = 1"
+            f" WHERE {ingredient_name_field_mysql} LIKE '{begin_name}%'"
+
+    check_boolean_arr = {f"{is_vegan_field_mysql}": is_vegan, f"{is_vegetarian_field_mysql}": is_vegetarian,
+                         f"{is_gluten_free_field_mysql}": is_gluten_free,
+                         f"{is_lactose_free_field_mysql}": is_lactose_free}
+
+    for check_boolean in check_boolean_arr:
+        boolean_value = check_boolean_arr[check_boolean]
+        if boolean_value:
+            query += f" AND {check_boolean} = 1"
+
+    check_none_arr = {f"{fat_field_mysql}": (max_fat, min_fat), f"{carb_field_mysql}": (max_carb, min_carb),
+                      f"{fiber_field_mysql}": (max_fiber, min_fiber),
+                      f"{protein_field_mysql}": (max_protein, min_protein)}
+    having_str = "HAVING"
+
+    for check_none in check_none_arr:
+        value_max = check_none_arr[check_none][0]
+        value_min = check_none_arr[check_none][1]
+        check_with_prefix = add_serving_prefix(check_none)
+        if value_max is not None:
+            query += f" {having_str} {check_with_prefix} <= {value_max}"
+            having_str = "AND"
+        if value_min is not None:
+            query += f" {having_str} {check_with_prefix} >= {value_min}"
+            having_str = "AND"
 
     error, ingredients = mysql_getting_action(cursor, query, False)
 
@@ -181,7 +177,7 @@ def make_dict_result(dishes, ingredients):
 
     for ingredient in ingredients:
         ingredient_name = ingredient[ingredient_name_field_mysql]
-        is_liquid = ingredient[is_liquid_field_mysql]
+        is_liquid = ingredient[is_liquid_field_mysql] == 1
         ingredients_arr.append({ingredient_name_field_param: ingredient_name,
                                 is_liquid_field_param: is_liquid})
 
@@ -194,7 +190,10 @@ def get_filtered_foods(begin_name, max_fat, max_carb, max_fiber,
                        is_lactose_free, is_gluten_free, include_dish, include_ingredient):
     dishes = []
     ingredients = []
+    result = None
+
     conn, cursor, error = get_mysql_cursor()
+
     if not error and include_dish:
         error, dishes = get_filtered_dishes_query(cursor, begin_name,max_fat, max_carb, max_fiber,
                                                   max_protein, min_fat, min_carb, min_fiber,
@@ -205,7 +204,9 @@ def get_filtered_foods(begin_name, max_fat, max_carb, max_fiber,
                                                        max_protein, min_fat, min_carb, min_fiber,
                                                        min_protein, is_vegan, is_vegetarian,
                                                        is_lactose_free, is_gluten_free)
-    result = make_dict_result(dishes, ingredients)
+    if not error:
+        result = make_dict_result(dishes, ingredients)
+
     close_connection(conn, cursor)
     return error, result
 
