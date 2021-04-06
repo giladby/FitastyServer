@@ -2,6 +2,7 @@ from http.server import BaseHTTPRequestHandler
 from Server_Users_Handling import *
 from Server_Food_Handling import *
 from Server_Demo import *
+import time
 
 class Server(BaseHTTPRequestHandler):
     def __init__(self, request, client_address, server):
@@ -32,6 +33,7 @@ class Server(BaseHTTPRequestHandler):
                 "/foods/insert_ingredient": self.insert_ingredient,
                 "/foods/get_foods": self.get_foods,
                 "/foods/insert_dish": self.insert_dish,
+                "/diet_diaries/insert_diet_diary"
                 "/json_echo": self.json_echo}
 
     def json_echo(self):
@@ -53,6 +55,7 @@ class Server(BaseHTTPRequestHandler):
         server_insert_dish(self)
 
     def get_ingredient_info(self):
+        time.sleep(30)
         server_get_ingredient_info(self)
 
     def get_foods(self):

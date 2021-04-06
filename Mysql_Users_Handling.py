@@ -2,6 +2,9 @@ from Mysql_Connection_General import *
 from Macros import *
 from Utils import *
 
+# ======================================================================================================================
+# get_account_info QUERY
+
 def make_account_info_dict(mysql_user_record):
     return {f"{password_field_param}": mysql_user_record[password_field_mysql],
             f"{age_field_param}": mysql_user_record[age_field_mysql],
@@ -16,6 +19,29 @@ def make_account_info_dict(mysql_user_record):
                                          f"{diet_type_protein_field_param}":
                                              mysql_user_record[diet_type_protein_field_mysql]},
             f"{weight_goal_field_param}": mysql_user_record[weight_goal_field_mysql]}
+
+def get_account_info_query(cursor, username):
+    found = False
+    query = f"SELECT * FROM {users_table_mysql} WHERE {username_field_mysql}='{username}'"
+
+    error, result = mysql_getting_action(cursor, query, True)
+    if not error and result:
+        found = True
+        result = make_account_info_dict(result)
+
+    return error, found, result
+
+def get_account_info_by_username(username):
+    result = None
+    found = False
+    conn, cursor, error = get_mysql_cursor()
+    if not error:
+        error, found, result = get_account_info_query(cursor, username)
+    close_connection(conn, cursor)
+    return error, found, result
+
+# ======================================================================================================================
+# get_calorie_info QUERY
 
 def calc_calorie_info(age, is_male, height, weight, activity_factor, diet_type_fat,
                       diet_type_carb, diet_type_protein, weight_goal):
@@ -59,17 +85,6 @@ def make_calorie_info_dict(mysql_user_record):
             f"{fiber_field_param}": fiber,
             f"{protein_field_param}": protein}
 
-def get_account_info_query(cursor, username):
-    found = False
-    query = f"SELECT * FROM {users_table_mysql} WHERE {username_field_mysql}='{username}'"
-
-    error, result = mysql_getting_action(cursor, query, True)
-    if not error and result:
-        found = True
-        result = make_account_info_dict(result)
-
-    return error, found, result
-
 def get_calorie_info_query(cursor, username):
     found = False
     query = f"SELECT * FROM {users_table_mysql} WHERE {username_field_mysql}='{username}'"
@@ -81,11 +96,33 @@ def get_calorie_info_query(cursor, username):
 
     return error, found, result
 
+def get_calorie_info_by_username(username):
+    result = None
+    found = False
+    conn, cursor, error = get_mysql_cursor()
+    if not error:
+        error, found, result = get_calorie_info_query(cursor, username)
+    close_connection(conn, cursor)
+    return error, found, result
+
+# ======================================================================================================================
+# delete_user QUERY
+
 def delete_user_query(cursor, username):
     query = f"DELETE FROM {users_table_mysql} WHERE {username_field_mysql} = %s"
     val = (username, )
 
     return mysql_single_action(cursor, query, val)
+
+def delete_user(username):
+    conn, cursor, error = get_mysql_cursor()
+    if not error:
+        error = delete_user_query(cursor, username)
+    close_connection(conn, cursor)
+    return error
+
+# ======================================================================================================================
+# insert_user QUERY
 
 def insert_user_query(cursor, username, password, age, is_male, height,
                       weight, activity_factor, diet_type, weight_goal):
@@ -100,6 +137,21 @@ def insert_user_query(cursor, username, password, age, is_male, height,
            diet_type[diet_type_protein_field_param], weight_goal)
 
     return mysql_single_action(cursor, query, val)
+
+def insert_user(username, password, age, is_male, height, weight,
+                activity_factor, diet_type, weight_goal):
+    conn, cursor, error = get_mysql_cursor()
+    if not error:
+        error = isinstance(diet_type, list) and len(diet_type) == 3
+    if not error:
+        error = insert_user_query(cursor, username, password, age,
+                                  is_male, height, weight, activity_factor,
+                                  diet_type, weight_goal)
+    close_connection(conn, cursor)
+    return error
+
+# ======================================================================================================================
+# update_user QUERY
 
 def update_user_query(cursor, prev_username, username, password, age, is_male,
                       height, weight, activity_factor, diet_type, weight_goal):
@@ -126,46 +178,11 @@ def update_user(prev_username, username, password, age, is_male, height, weight,
     close_connection(conn, cursor)
     return error
 
+# ======================================================================================================================
+# check_user QUERY
+
 def check_user(username, check_user, password):
     query = f"SELECT * FROM {users_table_mysql} WHERE {username_field_mysql}='{username}'"
     if check_user:
         query += f" AND {password_field_mysql}='{password}'"
     return check_existing(query)
-
-def insert_user(username, password, age, is_male, height, weight,
-                activity_factor, diet_type, weight_goal):
-    conn, cursor, error = get_mysql_cursor()
-    if not error:
-        error = isinstance(diet_type, list) and len(diet_type) == 3
-    if not error:
-        error = insert_user_query(cursor, username, password, age,
-                                  is_male, height, weight, activity_factor,
-                                  diet_type, weight_goal)
-    close_connection(conn, cursor)
-    return error
-
-def delete_user(username):
-    conn, cursor, error = get_mysql_cursor()
-    if not error:
-        error = delete_user_query(cursor, username)
-    close_connection(conn, cursor)
-    return error
-
-def get_account_info_by_username(username):
-    result = None
-    found = False
-    conn, cursor, error = get_mysql_cursor()
-    if not error:
-        error, found, result = get_account_info_query(cursor, username)
-    close_connection(conn, cursor)
-    return error, found, result
-
-def get_calorie_info_by_username(username):
-    result = None
-    found = False
-    conn, cursor, error = get_mysql_cursor()
-    if not error:
-        error, found, result = get_calorie_info_query(cursor, username)
-    close_connection(conn, cursor)
-    return error, found, result
-

@@ -5,6 +5,9 @@ from Macros import *
 from http import HTTPStatus
 from Utils import *
 
+# ======================================================================================================================
+# insert_dish REQUEST
+
 def check_insert_dish_params(data):
     error = True
     if data and dish_name_field_param in data and ingredients_field_param in data and \
@@ -39,6 +42,9 @@ def server_insert_dish(server):
         send_json(server, {name_exist_field_param: found})
     else:
         send_error(server, HTTPStatus.BAD_REQUEST.value)
+
+# ======================================================================================================================
+# get_foods REQUEST
 
 def check_get_foods_params(data):
     error = True
@@ -92,7 +98,6 @@ def server_get_foods(server):
         except:
             error = True
 
-
     if not error:
         error, data = read_json_convert_to_dictionary(server)
 
@@ -106,6 +111,9 @@ def server_get_foods(server):
         send_json(server, result)
     else:
         send_error(server, HTTPStatus.BAD_REQUEST.value)
+
+# ======================================================================================================================
+# insert_ingredient REQUEST
 
 def check_insert_ingredient_params(data):
     error = True
@@ -157,6 +165,9 @@ def server_insert_ingredient(server):
     else:
         send_error(server, HTTPStatus.BAD_REQUEST.value)
 
+# ======================================================================================================================
+# get_dish_info REQUEST
+
 def server_get_dish_info(server):
     print("in get_dish_info")
     error = True
@@ -176,6 +187,9 @@ def server_get_dish_info(server):
     else:
         send_error(server,
                    HTTPStatus.NOT_FOUND.value if not error else HTTPStatus.BAD_REQUEST.value)
+
+# ======================================================================================================================
+# get_ingredient_info REQUEST
 
 def server_get_ingredient_info(server):
     print("in get_ingredient_info")

@@ -2,6 +2,9 @@ from Mysql_Connection_General import *
 from Macros import *
 from Utils import *
 
+# ======================================================================================================================
+# get_dish_info QUERY
+
 def make_dish_info_dict(dish_name, mysql_user_records):
     fat = 0
     carb = 0
@@ -40,6 +43,18 @@ def get_dish_info_query(cursor, dish_name):
 
     return error, found, result
 
+def get_dish_info_by_name(dish_name):
+    result = None
+    found = False
+    conn, cursor, error = get_mysql_cursor()
+    if not error:
+        error, found, result = get_dish_info_query(cursor, dish_name)
+    close_connection(conn, cursor)
+    return error, found, result
+
+# ======================================================================================================================
+# get_ingredient_info QUERY
+
 def make_ingredient_info_dict(mysql_user_record):
     return {f"{ingredient_name_field_param}": mysql_user_record[ingredient_name_field_mysql],
             f"{is_liquid_field_param}": mysql_user_record[is_liquid_field_mysql] == 1,
@@ -64,6 +79,18 @@ def get_ingredient_info_query(cursor, ingredient_name):
 
     return error, found, result
 
+def get_ingredient_info_by_name(ingredient_name):
+    result = None
+    found = False
+    conn, cursor, error = get_mysql_cursor()
+    if not error:
+        error, found, result = get_ingredient_info_query(cursor, ingredient_name)
+    close_connection(conn, cursor)
+    return error, found, result
+
+# ======================================================================================================================
+# insert_ingredient QUERY
+
 def insert_ingredient_query(cursor, name, is_liquid, fat, carbs, fiber, protein,
                             is_vegan, is_vegetarian,is_gluten_free,
                             is_lactose_free, serving):
@@ -79,6 +106,20 @@ def insert_ingredient_query(cursor, name, is_liquid, fat, carbs, fiber, protein,
            convert_boolean_to_number(is_lactose_free), serving)
 
     return mysql_single_action(cursor, query, val)
+
+def insert_ingredient(name, is_liquid, fat, carbs, fiber, protein,
+                      is_vegan, is_vegetarian, is_gluten_free,
+                      is_lactose_free, serving):
+    conn, cursor, error = get_mysql_cursor()
+    if not error:
+        error = insert_ingredient_query(cursor, name, is_liquid, fat, carbs,
+                                        fiber, protein, is_vegan, is_vegetarian,
+                                        is_gluten_free, is_lactose_free, serving)
+    close_connection(conn, cursor)
+    return error
+
+# ======================================================================================================================
+# get_foods QUERY
 
 def get_filtered_dishes_query(cursor, begin_name, max_fat, max_carb, max_fiber,
                               max_protein, min_fat, min_carb, min_fiber,
@@ -210,44 +251,24 @@ def get_filtered_foods(begin_name, max_fat, max_carb, max_fiber,
     close_connection(conn, cursor)
     return error, result
 
+# ======================================================================================================================
+# check_ingredient QUERY
+
 def check_ingredient(ingredient_name):
     checking_query = f"SELECT * FROM {food_ingredients_table_mysql} WHERE" \
                      f" {ingredient_name_field_mysql}='{ingredient_name}'"
     return check_existing(checking_query)
+
+# ======================================================================================================================
+# check_dish QUERY
 
 def check_dish(dish_name):
     checking_query = f"SELECT * FROM {dishes_table_mysql} WHERE" \
                      f" {dish_name_field_mysql}='{dish_name}'"
     return check_existing(checking_query)
 
-def insert_ingredient(name, is_liquid, fat, carbs, fiber, protein,
-                      is_vegan, is_vegetarian, is_gluten_free,
-                      is_lactose_free, serving):
-    conn, cursor, error = get_mysql_cursor()
-    if not error:
-        error = insert_ingredient_query(cursor, name, is_liquid, fat, carbs,
-                                        fiber, protein, is_vegan, is_vegetarian,
-                                        is_gluten_free, is_lactose_free, serving)
-    close_connection(conn, cursor)
-    return error
-
-def get_dish_info_by_name(dish_name):
-    result = None
-    found = False
-    conn, cursor, error = get_mysql_cursor()
-    if not error:
-        error, found, result = get_dish_info_query(cursor, dish_name)
-    close_connection(conn, cursor)
-    return error, found, result
-
-def get_ingredient_info_by_name(ingredient_name):
-    result = None
-    found = False
-    conn, cursor, error = get_mysql_cursor()
-    if not error:
-        error, found, result = get_ingredient_info_query(cursor, ingredient_name)
-    close_connection(conn, cursor)
-    return error, found, result
+# ======================================================================================================================
+# insert_dish QUERY
 
 def insert_dish_query(conn, cursor, dish_name, ingredients_amount_dict):
     insertion_arr = []
