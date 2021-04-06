@@ -24,7 +24,8 @@ class Server(BaseHTTPRequestHandler):
                 "/users/check_username": self.check_username,
                 "/users/get_account_info": self.get_account_info,
                 "/foods/get_ingredient_info": self.get_ingredient_info,
-                "/foods/get_dish_info": self.get_dish_info}
+                "/foods/get_dish_info": self.get_dish_info,
+                "/users/get_calorie_info": self.get_calorie_info}
 
     def set_operations_dict_post(self):
         return {"/users/insert_account": self.insert_account,
@@ -41,6 +42,9 @@ class Server(BaseHTTPRequestHandler):
 
     def set_operations_dict_put(self):
         return {"/users/update_account": self.update_account}
+
+    def get_calorie_info(self):
+        server_get_calorie_info(self)
 
     def get_dish_info(self):
         server_get_dish_info(self)

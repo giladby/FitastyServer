@@ -109,6 +109,23 @@ def server_insert_account(server):
     else:
         send_error(server, HTTPStatus.BAD_REQUEST.value)
 
+def server_get_calorie_info(server):
+    print("in get_calorie_info")
+    error = True
+    found = False
+    result = None
+
+    qs = parse_qs(urlparse(server.path).query)
+    if username_field_param in qs and len(qs) == 1:
+        username = qs[username_field_param][0]
+        error, found, result = get_calorie_info_by_username(username)
+
+    if not error and found:
+        send_json(server, result)
+    else:
+        send_error(server,
+                   HTTPStatus.NOT_FOUND.value if not error else HTTPStatus.BAD_REQUEST.value)
+
 def server_get_account_info(server):
     print("in get_account_info")
     error = True

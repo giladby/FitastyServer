@@ -278,7 +278,7 @@ def add_ingredient_amount(ingredients_amount_dict, ingredient, amount):
 def get_ingredients_amount_of_dish(cursor, dish_name, percent, ingredients_amount_dict):
     found = False
     query = f"SELECT {ingredient_name_field_mysql}," \
-            f"{ingredient_amount_field_mysql} * percent as {ingredient_amount_field_mysql}" \
+            f"{ingredient_amount_field_mysql} * {percent} as {ingredient_amount_field_mysql}" \
             f" FROM {dish_ingredients_table_mysql} WHERE {dish_name_field_mysql}='{dish_name}'"
 
     error, result = mysql_getting_action(cursor, query, False)
