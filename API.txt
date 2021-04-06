@@ -73,7 +73,7 @@ GET
 		success -> status "OK"(200)	+
 			{
 				"carb" : (double),
-				"fiber" : (double)
+				"fiber" : (double),
 				"fat" : (double),
 				"protein" : (double),
 			}
@@ -272,7 +272,111 @@ POST
 
 ==================================================================================================================================================================
 
-insert new menu
-get menus titles (only name)
-get detailed menu by name (and username)
-get recommendations
+POST
+
+.../diet_diaries/insert_diet_diary?username=(str)
+
+	input:
+		{
+            "diet_diary_name" : (str)
+            "meals" : [
+					"meal_id" : (int)
+                    "dishes" : [
+                        {"dish_name" : (str), "percent" : (double)},
+                        ...
+                    ]
+                    "ingredients" : [
+                        {"ingredient_name" : (str), "amount" : (double)},
+                        ...
+                    ]
+				]
+		}
+	output:
+		fail -> status "bad_request"(400)
+		success -> status "OK"(200)	+
+			{
+                "name_exist" : (boolean)
+			}
+
+==================================================================================================================================================================
+
+GET
+
+.../diet_diaries/get_diet_diary?username=(str)&diet_diary_name=(str)
+
+	input: None
+	output:
+		fail -> status "bad_request"(400)
+		not found -> status "not found"(404)
+		success -> status "OK"(200)	+
+			{
+                "diet_diary_name" : (str)
+                "meals" : [
+                        "meal_id" : (int)
+                        "dishes" : [
+                            {"dish_name" : (str), "percent" : (double)},
+                            ...
+                        ]
+                        "ingredients" : [
+                            {"ingredient_name" : (str), "amount" : (double)},
+                            ...
+                        ]
+                    ]
+			}
+
+==================================================================================================================================================================
+
+GET
+
+.../diet_diaries/get_diet_diaries?username=(str)
+
+	input: None
+	output:
+		fail -> status "bad_request"(400)
+		success -> status "OK"(200)	+
+			[
+                {"diet_diary_name" : (str)},
+                ...
+            ]
+
+==================================================================================================================================================================
+
+DELETE
+
+.../diet_diaries/delete_diet_diary?username=(str)&diet_diary_name=(str)
+
+	input: None
+	output:
+		fail -> status "bad_request"(400)
+		not found -> status "not found"(404)
+		success -> status "OK"(200)
+
+==================================================================================================================================================================
+
+PUT
+
+.../diet_diaries/update_diet_diary?username=(str)&prev_diet_diary_name=(str)
+
+	input:
+		{
+			"diet_diary_name" : (str)
+            "meals" : [
+					"meal_id" : (int)
+                    "dishes" : [
+                        {"dish_name" : (str), "percent" : (double)},
+                        ...
+                    ]
+                    "ingredients" : [
+                        {"ingredient_name" : (str), "amount" : (double)},
+                        ...
+                    ]
+				]
+        }
+	output:
+		fail -> status "bad_request"(400)
+		success -> status "OK"(200)	+
+		{
+			"name_exist" : (boolean)
+		}
+
+==================================================================================================================================================================
