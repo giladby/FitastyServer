@@ -312,15 +312,19 @@ GET
 			{
                 "diet_diary_name" : (str)
                 "meals" : [
-                        "meal_id" : (int)
+                        "meal_id" : (int),
                         "dishes" : [
                             {"dish_name" : (str), "percent" : (double)},
                             ...
-                        ]
+                        ],
                         "ingredients" : [
                             {"ingredient_name" : (str), "amount" : (double)},
                             ...
-                        ]
+                        ],
+                        "fat" : (double),
+                        "carb" : (double),
+                        "fiber" : (double),
+                        "protein" : (double)
                     ]
 			}
 

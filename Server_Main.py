@@ -6,6 +6,7 @@ import time
 
 class Server(BaseHTTPRequestHandler):
     def __init__(self, request, client_address, server):
+        print("init")
         self.operations_dict_get = self.set_operations_dict_get()
         self.operations_dict_post = self.set_operations_dict_post()
         self.operations_dict_delete = self.set_operations_dict_delete()
