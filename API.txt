@@ -286,7 +286,7 @@ POST
                         ...
                     ]
                     "ingredients" : [
-                        {"ingredient_name" : (str), "amount" : (double)},
+                        {"ingredient_name" : (str), "is_liquid" : (boolean), "amount" : (double)},
                         ...
                     ]
 				]
