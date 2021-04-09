@@ -98,3 +98,40 @@ dishes_table_mysql = 'dishes'
 # ingredient_name_field_mysql = 'ingredient_name'
 ingredient_amount_field_mysql = 'ingredient_amount'
 dish_ingredients_table_mysql = 'dish_ingredients'
+
+# Diet Diaries Macros:
+# Params:
+diet_diary_name_field_param = 'diet_diary_name'
+meals_field_param = 'meals'
+meal_id_field_param = 'meal_id'
+# dishes_field_param = 'dishes'
+# dish_name_field_param = 'dish_name'
+# dish_percent_field_param = 'percent'
+# ingredients_field_param = 'ingredients'
+# ingredient_name_field_mysql = 'ingredient_name'
+# ingredient_amount_field_param = 'amount'
+# fat_field_param = 'fat'
+# carb_field_param = 'carb'
+# fiber_field_param = 'fiber'
+# protein_field_param = 'protein'
+
+# Mysql :
+diet_diary_id_field_mysql = 'diet_diary_id'
+diet_diary_name_field_mysql = 'diet_diary_name'
+# username_field_mysql = 'username'
+diet_diaries_table_mysql = 'diet_diaries'
+
+meal_public_id_field_mysql = 'meal_public_id'
+meal_id_field_mysql = 'meal_id'
+# diet_diary_id_field_mysql = 'diet_diary_id'
+diet_diary_meals_table_mysql = 'diet_diary_meals'
+
+# meal_public_id_field_mysql = 'meal_public_id'
+# dish_name_field_mysql = 'dish_name'
+dish_percent_field_mysql = 'dish_percent'
+meal_dishes_table_mysql = 'meal_dishes'
+
+# meal_public_id_field_mysql = 'meal_public_id'
+# ingredient_name_field_mysql = 'ingredient_name'
+# ingredient_amount_field_mysql = 'ingredient_amount'
+meal_ingredients_table_mysql = 'meal_ingredients'

@@ -278,15 +278,15 @@ POST
 
 	input:
 		{
-            "diet_diary_name" : (str)
+            "diet_diary_name" : (str),
             "meals" : [
-					"meal_id" : (int)
+					"meal_id" : (int),
                     "dishes" : [
                         {"dish_name" : (str), "percent" : (double)},
                         ...
-                    ]
+                    ],
                     "ingredients" : [
-                        {"ingredient_name" : (str), "is_liquid" : (boolean), "amount" : (double)},
+                        {"ingredient_name" : (str), "amount" : (double)},
                         ...
                     ]
 				]
@@ -318,7 +318,7 @@ GET
                             ...
                         ],
                         "ingredients" : [
-                            {"ingredient_name" : (str), "amount" : (double)},
+                            {"ingredient_name" : (str), "is_liquid" : (boolean), "amount" : (double)},
                             ...
                         ],
                         "fat" : (double),
@@ -337,6 +337,7 @@ GET
 	input: None
 	output:
 		fail -> status "bad_request"(400)
+		not found -> status "not found"(404)
 		success -> status "OK"(200)	+
 			[
                 {"diet_diary_name" : (str)},

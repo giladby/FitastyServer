@@ -22,9 +22,9 @@ def make_account_info_dict(mysql_user_record):
 
 def get_account_info_query(cursor, username):
     found = False
-    query = f"SELECT * FROM {users_table_mysql} WHERE {username_field_mysql}='{username}'"
-
-    error, result = mysql_getting_action(cursor, query, True)
+    query = f"SELECT * FROM {users_table_mysql} WHERE {username_field_mysql} = %s"
+    val = (username,)
+    error, result = mysql_getting_action(cursor, query, val, True)
     if not error and result:
         found = True
         result = make_account_info_dict(result)
@@ -87,9 +87,9 @@ def make_calorie_info_dict(mysql_user_record):
 
 def get_calorie_info_query(cursor, username):
     found = False
-    query = f"SELECT * FROM {users_table_mysql} WHERE {username_field_mysql}='{username}'"
-
-    error, result = mysql_getting_action(cursor, query, True)
+    query = f"SELECT * FROM {users_table_mysql} WHERE {username_field_mysql} = %s"
+    val = (username,)
+    error, result = mysql_getting_action(cursor, query, val, True)
     if not error and result:
         found = True
         result = make_calorie_info_dict(result)
@@ -182,7 +182,9 @@ def update_user(prev_username, username, password, age, is_male, height, weight,
 # check_user QUERY
 
 def check_user(username, check_user, password):
-    query = f"SELECT * FROM {users_table_mysql} WHERE {username_field_mysql}='{username}'"
+    query = f"SELECT * FROM {users_table_mysql} WHERE {username_field_mysql} = %s"
+    val = (username,)
     if check_user:
-        query += f" AND {password_field_mysql}='{password}'"
-    return check_existing(query)
+        query += f" AND {password_field_mysql} = %s"
+        val += (password,)
+    return check_existing(query, val)

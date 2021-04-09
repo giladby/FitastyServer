@@ -1,12 +1,11 @@
 from http.server import BaseHTTPRequestHandler
 from Server_Users_Handling import *
 from Server_Food_Handling import *
+from Server_Diet_Diaries_Handling import *
 from Server_Demo import *
-import time
 
 class Server(BaseHTTPRequestHandler):
     def __init__(self, request, client_address, server):
-        print("init")
         self.operations_dict_get = self.set_operations_dict_get()
         self.operations_dict_post = self.set_operations_dict_post()
         self.operations_dict_delete = self.set_operations_dict_delete()
@@ -27,14 +26,16 @@ class Server(BaseHTTPRequestHandler):
                 "/users/get_account_info": self.get_account_info,
                 "/foods/get_ingredient_info": self.get_ingredient_info,
                 "/foods/get_dish_info": self.get_dish_info,
-                "/users/get_calorie_info": self.get_calorie_info}
+                "/users/get_calorie_info": self.get_calorie_info,
+                "/diet_diaries/get_diet_diary": self.get_diet_diary,
+                "/diet_diaries/get_diet_diaries": self.get_diet_diaries}
 
     def set_operations_dict_post(self):
         return {"/users/insert_account": self.insert_account,
                 "/foods/insert_ingredient": self.insert_ingredient,
                 "/foods/get_foods": self.get_foods,
                 "/foods/insert_dish": self.insert_dish,
-                "/diet_diaries/insert_diet_diary"
+                "/diet_diaries/insert_diet_diary": self.insert_diet_diary,
                 "/json_echo": self.json_echo}
 
     def json_echo(self):
@@ -46,6 +47,15 @@ class Server(BaseHTTPRequestHandler):
     def set_operations_dict_put(self):
         return {"/users/update_account": self.update_account}
 
+    def get_diet_diary(self):
+        server_get_diet_diary(self)
+
+    def get_diet_diaries(self):
+        server_get_diet_diaries(self)
+
+    def insert_diet_diary(self):
+        server_insert_diet_diary(self)
+
     def get_calorie_info(self):
         server_get_calorie_info(self)
 
@@ -56,7 +66,6 @@ class Server(BaseHTTPRequestHandler):
         server_insert_dish(self)
 
     def get_ingredient_info(self):
-        time.sleep(30)
         server_get_ingredient_info(self)
 
     def get_foods(self):

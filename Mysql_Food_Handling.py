@@ -34,9 +34,9 @@ def get_dish_info_query(cursor, dish_name):
     query = f"SELECT * FROM {dish_ingredients_table_mysql} JOIN {food_ingredients_table_mysql}" \
             f" ON ({dish_ingredients_table_mysql}.{ingredient_name_field_mysql} =" \
             f" {food_ingredients_table_mysql}.{ingredient_name_field_mysql})" \
-            f" WHERE {dish_name_field_mysql} = '{dish_name}'"
-
-    error, result = mysql_getting_action(cursor, query, False)
+            f" WHERE {dish_name_field_mysql} = %s"
+    val = (dish_name,)
+    error, result = mysql_getting_action(cursor, query, val, False)
     if not error and result:
         found = True
         result = make_dish_info_dict(dish_name, result)
@@ -70,9 +70,9 @@ def make_ingredient_info_dict(mysql_user_record):
 
 def get_ingredient_info_query(cursor, ingredient_name):
     found = False
-    query = f"SELECT * FROM {food_ingredients_table_mysql} WHERE {ingredient_name_field_mysql}='{ingredient_name}'"
-
-    error, result = mysql_getting_action(cursor, query, True)
+    query = f"SELECT * FROM {food_ingredients_table_mysql} WHERE {ingredient_name_field_mysql} = %s"
+    val = (ingredient_name,)
+    error, result = mysql_getting_action(cursor, query, val, True)
     if not error and result:
         found = True
         result = make_ingredient_info_dict(result)
@@ -139,8 +139,8 @@ def get_filtered_dishes_query(cursor, begin_name, max_fat, max_carb, max_fiber,
                      f" ON ({food_ingredients_table_mysql}.{ingredient_name_field_mysql} =" \
                      f" {dish_ingredients_table_mysql}.{ingredient_name_field_mysql})) as joined_table" \
             f" GROUP BY {dish_name_field_mysql}" \
-            f" HAVING {dish_name_field_mysql} LIKE '{begin_name}%'"
-
+            f" HAVING {dish_name_field_mysql} LIKE %s"
+    val = (f"{begin_name}%",)
     check_none_arr = {"sum_fat": (max_fat, min_fat), "sum_carb": (max_carb, min_carb),
                       "sum_fiber": (max_fiber, min_fiber), "sum_protein": (max_protein, min_protein)}
     check_boolean_arr = {"bit_vegan": is_vegan, "bit_vegetarian": is_vegetarian,
@@ -150,16 +150,18 @@ def get_filtered_dishes_query(cursor, begin_name, max_fat, max_carb, max_fiber,
         value_max = check_none_arr[check_none][0]
         value_min = check_none_arr[check_none][1]
         if value_max is not None:
-            query += f" AND {check_none} <= {value_max}"
+            query += f" AND {check_none} <= %s"
+            val += (value_max,)
         if value_min is not None:
-            query += f" AND {check_none} >= {value_min}"
+            query += f" AND {check_none} >= %s"
+            val += (value_min,)
 
     for check_boolean in check_boolean_arr:
         boolean_value = check_boolean_arr[check_boolean]
         if boolean_value:
             query += f" AND {check_boolean} = 1"
 
-    error, dishes = mysql_getting_action(cursor, query, False)
+    error, dishes = mysql_getting_action(cursor, query, val, False)
 
     return error, dishes
 
@@ -178,7 +180,8 @@ def get_filtered_ingredients_query(cursor, begin_name, max_fat, max_carb, max_fi
             f" {convert_field_by_serving(fat_field_mysql)}," \
             f" {convert_field_by_serving(carb_field_mysql)}, {convert_field_by_serving(fiber_field_mysql)}," \
             f" {convert_field_by_serving(protein_field_mysql)} FROM {food_ingredients_table_mysql}" \
-            f" WHERE {ingredient_name_field_mysql} LIKE '{begin_name}%'"
+            f" WHERE {ingredient_name_field_mysql} LIKE %s"
+    val = (f"{begin_name}%", )
 
     check_boolean_arr = {f"{is_vegan_field_mysql}": is_vegan, f"{is_vegetarian_field_mysql}": is_vegetarian,
                          f"{is_gluten_free_field_mysql}": is_gluten_free,
@@ -199,13 +202,15 @@ def get_filtered_ingredients_query(cursor, begin_name, max_fat, max_carb, max_fi
         value_min = check_none_arr[check_none][1]
         check_with_prefix = add_serving_prefix(check_none)
         if value_max is not None:
-            query += f" {having_str} {check_with_prefix} <= {value_max}"
+            query += f" {having_str} {check_with_prefix} <= %s"
+            val += (value_max,)
             having_str = "AND"
         if value_min is not None:
-            query += f" {having_str} {check_with_prefix} >= {value_min}"
+            query += f" {having_str} {check_with_prefix} >= %s"
+            val += (value_min,)
             having_str = "AND"
 
-    error, ingredients = mysql_getting_action(cursor, query, False)
+    error, ingredients = mysql_getting_action(cursor, query, val, False)
 
     return error, ingredients
 
@@ -256,16 +261,18 @@ def get_filtered_foods(begin_name, max_fat, max_carb, max_fiber,
 
 def check_ingredient(ingredient_name):
     checking_query = f"SELECT * FROM {food_ingredients_table_mysql} WHERE" \
-                     f" {ingredient_name_field_mysql}='{ingredient_name}'"
-    return check_existing(checking_query)
+                     f" {ingredient_name_field_mysql} = %s"
+    val = (ingredient_name,)
+    return check_existing(checking_query, val)
 
 # ======================================================================================================================
 # check_dish QUERY
 
 def check_dish(dish_name):
     checking_query = f"SELECT * FROM {dishes_table_mysql} WHERE" \
-                     f" {dish_name_field_mysql}='{dish_name}'"
-    return check_existing(checking_query)
+                     f" {dish_name_field_mysql} = %s"
+    val = (dish_name,)
+    return check_existing(checking_query, val)
 
 # ======================================================================================================================
 # insert_dish QUERY
@@ -300,9 +307,9 @@ def get_ingredients_amount_of_dish(cursor, dish_name, percent, ingredients_amoun
     found = False
     query = f"SELECT {ingredient_name_field_mysql}," \
             f"{ingredient_amount_field_mysql} * {percent} as {ingredient_amount_field_mysql}" \
-            f" FROM {dish_ingredients_table_mysql} WHERE {dish_name_field_mysql}='{dish_name}'"
-
-    error, result = mysql_getting_action(cursor, query, False)
+            f" FROM {dish_ingredients_table_mysql} WHERE {dish_name_field_mysql} = %s"
+    val = (dish_name,)
+    error, result = mysql_getting_action(cursor, query, val, False)
     if not error and result:
         found = True
         for row in result:

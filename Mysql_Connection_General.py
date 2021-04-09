@@ -61,12 +61,12 @@ def mysql_multiple_action(conn, cursor, actions_arr):
             error = True
     return error
 
-def mysql_getting_action(cursor, query, single):
+def mysql_getting_action(cursor, query, val, single):
     result = None
     error = False
     if cursor:
         try:
-            cursor.execute(query)
+            cursor.execute(query, val)
             if single:
                 result = cursor.fetchone()
             else:
@@ -75,19 +75,19 @@ def mysql_getting_action(cursor, query, single):
             error = True
     return error, result
 
-def check_query(cursor, checking_query):
+def check_query(cursor, checking_query, val):
     found = False
 
-    error, result = mysql_getting_action(cursor, checking_query, True)
+    error, result = mysql_getting_action(cursor, checking_query, val, True)
     if result:
         found = True
 
     return found, error
 
-def check_existing(checking_query):
+def check_existing(checking_query, val):
     conn, cursor, error = get_mysql_cursor()
     result = None
     if not error:
-        result, error = check_query(cursor, checking_query)
+        result, error = check_query(cursor, checking_query, val)
     close_connection(conn, cursor)
     return result, error
