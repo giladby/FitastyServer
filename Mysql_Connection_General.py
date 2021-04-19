@@ -46,20 +46,28 @@ def mysql_single_action(cursor, query, val):
             error = True
     return error
 
-def mysql_multiple_action(conn, cursor, actions_arr):
+def multiple_action_body_func(cursor, args):
+    actions_arr = args[0]
+
+    for action in actions_arr:
+        query = action[0]
+        val = action[1]
+        cursor.execute(query, val)
+
+def transaction_execute(conn, cursor, body_func, args):
     error = False
     if cursor:
         try:
             conn.start_transaction()
-            for action in actions_arr:
-                query = action[0]
-                val = action[1]
-                cursor.execute(query, val)
+            body_func(cursor, args)
             conn.commit()
         except:
             conn.rollback()
             error = True
     return error
+
+def mysql_multiple_action(conn, cursor, actions_arr):
+    return transaction_execute(conn,cursor, multiple_action_body_func, (actions_arr, ))
 
 def mysql_getting_action(cursor, query, val, single):
     result = None

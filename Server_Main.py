@@ -42,10 +42,18 @@ class Server(BaseHTTPRequestHandler):
         server_json_echo(self)
 
     def set_operations_dict_delete(self):
-        return {"/users/delete_account": self.delete_account}
+        return {"/users/delete_account": self.delete_account,
+                "/diet_diaries/delete_diet_diary": self.delete_diet_diary}
 
     def set_operations_dict_put(self):
-        return {"/users/update_account": self.update_account}
+        return {"/users/update_account": self.update_account,
+                "/diet_diaries/update_diet_diary": self.update_diet_diary}
+
+    def update_diet_diary(self):
+        server_update_diet_diary(self)
+
+    def delete_diet_diary(self):
+        server_delete_diet_diary(self)
 
     def get_diet_diary(self):
         server_get_diet_diary(self)

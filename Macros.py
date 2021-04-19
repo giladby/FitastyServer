@@ -102,6 +102,7 @@ dish_ingredients_table_mysql = 'dish_ingredients'
 # Diet Diaries Macros:
 # Params:
 diet_diary_name_field_param = 'diet_diary_name'
+prev_diet_diary_name_field_param = 'prev_diet_diary_name'
 meals_field_param = 'meals'
 meal_id_field_param = 'meal_id'
 # dishes_field_param = 'dishes'

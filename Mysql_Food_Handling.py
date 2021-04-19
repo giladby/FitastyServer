@@ -13,10 +13,11 @@ def make_dish_info_dict(dish_name, mysql_user_records):
     ingredients_arr = []
 
     for record in mysql_user_records:
-        fat += record[fat_field_mysql]
-        carb += record[carb_field_mysql]
-        fiber += record[fiber_field_mysql]
-        protein += record[protein_field_mysql]
+        mulitplier = record[ingredient_amount_field_mysql] / 100
+        fat += record[fat_field_mysql] * mulitplier
+        carb += record[carb_field_mysql] * mulitplier
+        fiber += record[fiber_field_mysql] * mulitplier
+        protein += record[protein_field_mysql] * mulitplier
         ingredient_list = {f"{ingredient_name_field_param}": record[ingredient_name_field_mysql],
                            f"{is_liquid_field_param}": record[is_liquid_field_mysql] == 1,
                            f"{ingredient_amount_field_param}": record[ingredient_amount_field_mysql]}

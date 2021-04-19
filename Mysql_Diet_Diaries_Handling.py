@@ -47,27 +47,23 @@ def insert_meal_ingredient_query(cursor, meal_public_id, ingredients, ingredient
     val = (meal_public_id, ingredient_name, amount)
     cursor.execute(query, val)
 
+def insert_diet_diary_transaction_func(cursor, args):
+    username = args[0]
+    diet_diary_name = args[1]
+    meals_dict = args[2]
+
+    diet_diary_id = insert_main_diet_diary_query(cursor, diet_diary_name, username)
+    for meal_id in meals_dict:
+        meal_public_id = insert_diet_diary_meal_query(cursor, diet_diary_id, meal_id)
+        dishes, ingredients = meals_dict[meal_id]
+        for dish_name in dishes:
+            insert_meal_dish_query(cursor, meal_public_id, dishes, dish_name)
+        for ingredient_name in ingredients:
+            insert_meal_ingredient_query(cursor, meal_public_id, ingredients, ingredient_name)
+
 def insert_diet_diary_query(conn, cursor, username, diet_diary_name, meals_dict):
-    error = False
-    if cursor:
-        try:
-            conn.start_transaction()
-
-            diet_diary_id = insert_main_diet_diary_query(cursor, diet_diary_name, username)
-            for meal_id in meals_dict:
-                meal_public_id = insert_diet_diary_meal_query(cursor, diet_diary_id, meal_id)
-                dishes, ingredients = meals_dict[meal_id]
-                for dish_name in dishes:
-                    insert_meal_dish_query(cursor, meal_public_id, dishes, dish_name)
-                for ingredient_name in ingredients:
-                    insert_meal_ingredient_query(cursor, meal_public_id, ingredients, ingredient_name)
-
-            conn.commit()
-        except:
-            conn.rollback()
-            error = True
-
-    return error
+    return transaction_execute(conn, cursor, insert_diet_diary_transaction_func,
+                               (username, diet_diary_name, meals_dict))
 
 def check_dish_params(dish):
     return isinstance(dish, dict) and dish_name_field_param in dish and \
@@ -364,3 +360,87 @@ def get_diet_diaries_names(username):
         error, found, result = get_diet_diaries_query(cursor, username)
     close_connection(conn, cursor)
     return error, found, result
+
+# ======================================================================================================================
+# delete_diet_diary QUERY
+
+def delete_diet_diary_main(cursor, diet_diary_name, username):
+    query = f"DELETE FROM {diet_diaries_table_mysql}" \
+            f" WHERE {username_field_mysql} = %s AND {diet_diary_name_field_mysql} = %s"
+    val = (username, diet_diary_name)
+    cursor.execute(query, val)
+
+def meals_join_diearies():
+    return f"JOIN {diet_diaries_table_mysql}" \
+           f" ON ({diet_diaries_table_mysql}.{diet_diary_id_field_mysql} =" \
+           f" {diet_diary_meals_table_mysql}.{diet_diary_id_field_mysql})" \
+           f" WHERE {diet_diary_name_field_mysql} = %s" \
+           f" AND {username_field_mysql} = %s"
+
+def delete_meal_component(cursor, diet_diary_name, username, table_name):
+    query = f"DELETE {table_name} FROM {table_name}" \
+            f" JOIN {diet_diary_meals_table_mysql}" \
+            f" ON ({table_name}.{meal_public_id_field_mysql} =" \
+            f" {diet_diary_meals_table_mysql}.{meal_public_id_field_mysql}) " + meals_join_diearies()
+
+    val = (diet_diary_name, username)
+    cursor.execute(query, val)
+
+def delete_meal_dishes(cursor, diet_diary_name, username):
+    delete_meal_component(cursor, diet_diary_name, username, meal_dishes_table_mysql)
+
+def delete_meal_ingredients(cursor, diet_diary_name, username):
+    delete_meal_component(cursor, diet_diary_name, username, meal_ingredients_table_mysql)
+
+def delete_meals(cursor, diet_diary_name, username):
+    query = f"DELETE {diet_diary_meals_table_mysql}" \
+            f" FROM {diet_diary_meals_table_mysql} " + meals_join_diearies()
+
+    val = (diet_diary_name, username)
+    cursor.execute(query, val)
+
+def delete_diet_diary_transaction_func(cursor, args):
+    diet_diary_name = args[0]
+    username = args[1]
+
+    delete_meal_dishes(cursor, diet_diary_name, username)
+    delete_meal_ingredients(cursor, diet_diary_name, username)
+    delete_meals(cursor, diet_diary_name, username)
+    delete_diet_diary_main(cursor, diet_diary_name, username)
+
+def delete_diet_diary_query(conn, cursor, diet_diary_name, username):
+    return transaction_execute(conn, cursor, delete_diet_diary_transaction_func,
+                               (diet_diary_name, username))
+
+def delete_diet_diary(diet_diary_name, username):
+    conn, cursor, error = get_mysql_cursor()
+    if not error:
+        error = delete_diet_diary_query(conn, cursor, diet_diary_name, username)
+    close_connection(conn, cursor)
+    return error
+
+# ======================================================================================================================
+# update_diet_diary QUERY
+
+def update_diet_diary_transaction_func(cursor, args):
+    prev_diet_diary_name = args[0]
+    diet_diary_name = args[1]
+    username = args[2]
+    meals_dict = args[3]
+
+    delete_diet_diary_transaction_func(cursor, (prev_diet_diary_name, username))
+    insert_diet_diary_transaction_func(cursor, (username, diet_diary_name, meals_dict))
+
+def update_diet_diary_query(conn, cursor, prev_diet_diary_name, diet_diary_name, username, meals_dict):
+    return transaction_execute(conn, cursor, update_diet_diary_transaction_func,
+                               (prev_diet_diary_name, diet_diary_name, username, meals_dict))
+
+def update_diet_diary(prev_diet_diary_name, username, diet_diary_name, meals):
+    conn, cursor, error = get_mysql_cursor()
+    meals_dict = {}
+    if not error:
+        error, meals_dict = fill_meals_dict(meals)
+    if not error:
+        error = update_diet_diary_query(conn, cursor, prev_diet_diary_name, diet_diary_name, username, meals_dict)
+    close_connection(conn, cursor)
+    return error
