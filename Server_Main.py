@@ -102,9 +102,9 @@ class Server(BaseHTTPRequestHandler):
 
     def operate_by_operations_dict(self, operations_dict):
         sub = urlparse(self.path).path
-        if sub in operations_dict:
+        try:
             operations_dict.get(sub)()
-        else:
+        except:
             send_error(self, HTTPStatus.BAD_REQUEST.value)
 
     def do_GET(self):
