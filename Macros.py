@@ -115,6 +115,7 @@ meal_id_field_param = 'meal_id'
 # carb_field_param = 'carb'
 # fiber_field_param = 'fiber'
 # protein_field_param = 'protein'
+diet_diaries_field_param = 'diet_diaries'
 
 # Mysql :
 diet_diary_id_field_mysql = 'diet_diary_id'

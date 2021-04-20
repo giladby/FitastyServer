@@ -339,7 +339,7 @@ def make_diet_diaries_dict(records):
     diet_diaries = []
     for record in records:
         diet_diaries.append({f"{diet_diary_name_field_param}": record[diet_diary_name_field_mysql]})
-    return diet_diaries
+    return {f"{diet_diaries_field_param}": diet_diaries}
 
 def get_diet_diaries_query(cursor, username):
     found = False
