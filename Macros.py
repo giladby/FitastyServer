@@ -29,6 +29,7 @@ weight_goal_field_param = 'weight_goal'
 
 # Mysql :
 username_field_mysql = 'username'
+id_field_mysql = 'id'
 password_field_mysql = 'password'
 age_field_mysql = 'age'
 is_male_field_mysql = 'is_male'
@@ -120,7 +121,7 @@ diet_diaries_field_param = 'diet_diaries'
 # Mysql :
 diet_diary_id_field_mysql = 'diet_diary_id'
 diet_diary_name_field_mysql = 'diet_diary_name'
-# username_field_mysql = 'username'
+id_owner_field_mysql = 'user_id'
 diet_diaries_table_mysql = 'diet_diaries'
 
 meal_public_id_field_mysql = 'meal_public_id'

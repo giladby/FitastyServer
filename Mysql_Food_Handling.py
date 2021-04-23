@@ -264,7 +264,8 @@ def check_ingredient(ingredient_name):
     checking_query = f"SELECT * FROM {food_ingredients_table_mysql} WHERE" \
                      f" {ingredient_name_field_mysql} = %s"
     val = (ingredient_name,)
-    return check_existing(checking_query, val)
+    _, found, error = check_existing(checking_query, val)
+    return found, error
 
 # ======================================================================================================================
 # check_dish QUERY
@@ -273,7 +274,8 @@ def check_dish(dish_name):
     checking_query = f"SELECT * FROM {dishes_table_mysql} WHERE" \
                      f" {dish_name_field_mysql} = %s"
     val = (dish_name,)
-    return check_existing(checking_query, val)
+    _, found, error = check_existing(checking_query, val)
+    return found, error
 
 # ======================================================================================================================
 # insert_dish QUERY

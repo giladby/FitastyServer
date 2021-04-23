@@ -90,12 +90,13 @@ def check_query(cursor, checking_query, val):
     if result:
         found = True
 
-    return found, error
+    return result, found, error
 
 def check_existing(checking_query, val):
     conn, cursor, error = get_mysql_cursor()
     result = None
+    found = False
     if not error:
-        result, error = check_query(cursor, checking_query, val)
+        result, found, error = check_query(cursor, checking_query, val)
     close_connection(conn, cursor)
-    return result, error
+    return result, found, error

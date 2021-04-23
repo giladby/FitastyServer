@@ -187,4 +187,5 @@ def check_user(username, check_user, password):
     if check_user:
         query += f" AND {password_field_mysql} = %s"
         val += (password,)
-    return check_existing(query, val)
+    _, found, error = check_existing(query, val)
+    return found, error
