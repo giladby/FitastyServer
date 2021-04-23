@@ -255,17 +255,19 @@ POST
 			"is_gluten_free" : (boolean)
 			"is_lactose_free" : (boolean)
 			******************************************************************************************************
+			"min_percent" : (double)
+			"max_percent" : (double)
 		}
 	output:
 		fail -> status "bad_request"(400)
 		success -> status "OK"(200)	+
 			{
 				"dishes" : [
-					{"dish_name" : (str)},
+					{"dish_name" : (str), "percent" : (double)},
 					...
 				]
 				"ingredients" : [
-				    {"ingredient_name" : (str), "is_liquid" : (boolean)},
+				    {"ingredient_name" : (str), "is_liquid" : (boolean), "amount" : (double)},
 				    ...
 			    ]
 			}
