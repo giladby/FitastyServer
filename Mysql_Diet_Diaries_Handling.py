@@ -1,6 +1,5 @@
 from Mysql_Connection_General import *
 from Macros import *
-from Utils import *
 
 # ======================================================================================================================
 # check_diet_diary QUERY
@@ -364,34 +363,37 @@ def get_diet_diary(diet_diary_name, username):
 # ======================================================================================================================
 # get_diet_diaries QUERY
 
-def make_diet_diaries_dict(records):
-    diet_diaries = []
+def make_diet_diaries_dict(records, diet_diaries):
     for record in records:
-        diet_diaries.append({f"{diet_diary_name_field_param}": record[diet_diary_name_field_mysql]})
+        diet_diary_name = record[diet_diary_name_field_mysql]
+        if diet_diary_name:
+            diet_diaries.append({f"{diet_diary_name_field_param}": diet_diary_name})
     return {f"{diet_diaries_field_param}": diet_diaries}
 
 def get_diet_diaries_query(cursor, username):
-    found = False
-    query = f"SELECT {diet_diary_name_field_mysql}" \
-            f" FROM {diet_diaries_table_mysql} JOIN {users_table_mysql}" \
+    diet_diaries = []
+
+    query = f"SELECT {id_field_mysql}, {diet_diary_name_field_mysql}" \
+            f" FROM {users_table_mysql} LEFT JOIN {diet_diaries_table_mysql}" \
             f" ON {diet_diaries_table_mysql}.{id_owner_field_mysql} = {users_table_mysql}.{id_field_mysql}" \
             f" WHERE {username_field_mysql} = %s"
     val = (username,)
+
     error, result = mysql_getting_action(cursor, query, val, False)
     if not error and result:
-        found = True
-        result = make_diet_diaries_dict(result)
+        result = make_diet_diaries_dict(result, diet_diaries)
+    else:
+        error = True
 
-    return error, found, result
+    return error, result
 
 def get_diet_diaries_names(username):
     result = None
-    found = False
     conn, cursor, error = get_mysql_cursor()
     if not error:
-        error, found, result = get_diet_diaries_query(cursor, username)
+        error, result = get_diet_diaries_query(cursor, username)
     close_connection(conn, cursor)
-    return error, found, result
+    return error, result
 
 # ======================================================================================================================
 # delete_diet_diary QUERY

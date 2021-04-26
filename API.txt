@@ -240,14 +240,10 @@ POST
 		{
 			"name_begin" : (str)
 			*** Those params should be set only for inserting new diet diary ***
-			"max_fat" : (double)
-			"max_carb" : (double)
-			"max_fiber" : (double)
-			"max_protein" : (double)
-			"min_fat" : (double)
-			"min_carb" : (double)
-			"min_fiber" : (double)
-			"min_protein" : (double)
+			"fat" : (double)
+			"carb" : (double)
+			"fiber" : (double)
+			"protein" : (double)
 			*********************************************************************
 			**** True = search for dishes/ingredients which are vegan/.., False = do not filter vegan/.. dishes **
 			"is_vegan" : (boolean)
@@ -339,7 +335,6 @@ GET
 	input: None
 	output:
 		fail -> status "bad_request"(400)
-		not found -> status "not found"(404)
 		success -> status "OK"(200)	+
 		{
 		    "diet_diaries":	 [

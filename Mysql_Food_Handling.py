@@ -1,6 +1,7 @@
 from Mysql_Connection_General import *
 from Macros import *
 from Utils import *
+import math
 
 # ======================================================================================================================
 # get_dish_info QUERY
@@ -122,40 +123,60 @@ def insert_ingredient(name, is_liquid, fat, carbs, fiber, protein,
 # ======================================================================================================================
 # get_foods QUERY
 
-def get_filtered_dishes_query(cursor, begin_name, max_fat, max_carb, max_fiber,
-                              max_protein, min_fat, min_carb, min_fiber,
-                              min_protein, is_vegan, is_vegetarian,
-                              is_lactose_free, is_gluten_free):
-    query = f"SELECT {dish_name_field_mysql}, SUM({fat_field_mysql}) as sum_fat," \
-            f" SUM({carb_field_mysql}) as sum_carb," \
-            f" SUM({fiber_field_mysql}) as sum_fiber, SUM({protein_field_mysql}) as sum_protein," \
+def get_min_max_percent(min_input, max_input):
+    max_result = max_input if max_input else math.inf
+    min_result = min_input if min_input else 0
+
+    return min_result, max_result
+
+def sum_prefix_string():
+    return "sum_"
+
+def sum_prefix(element):
+    return f"{sum_prefix_string()}{element}"
+
+def sum_element_in_query(element):
+    return f"SUM({element}) AS {sum_prefix(element)}"
+
+def convert_amount(to_convert):
+    return f"{to_convert}*{ingredient_amount_field_mysql}/100 as {to_convert}"
+
+def get_filtered_dishes_query(cursor, begin_name, fat, carb, fiber,
+                              protein, is_vegan, is_vegetarian,
+                              is_lactose_free, is_gluten_free, min_percent, max_percent):
+    query = f"SELECT {dish_name_field_mysql}," \
+            f" {sum_element_in_query(fat_field_mysql)}, {sum_element_in_query(carb_field_mysql)}," \
+            f" {sum_element_in_query(fiber_field_mysql)}, {sum_element_in_query(protein_field_mysql)}," \
             f" BIT_AND({is_vegan_field_mysql}) as bit_vegan," \
             f" BIT_AND({is_vegetarian_field_mysql}) as bit_vegetarian," \
             f" BIT_AND({is_gluten_free_field_mysql}) as bit_gluten," \
             f" BIT_AND({is_lactose_free_field_mysql}) as bit_lactose" \
-            f" FROM (SELECT {dish_name_field_mysql}, {fat_field_mysql}, {carb_field_mysql}, {fiber_field_mysql}," \
-                     f" {protein_field_mysql}, {is_vegan_field_mysql}, {is_vegetarian_field_mysql}," \
+            f" FROM (SELECT {dish_name_field_mysql}, {convert_amount(fat_field_mysql)}," \
+                     f" {convert_amount(carb_field_mysql)}, {convert_amount(fiber_field_mysql)}," \
+                     f" {convert_amount(protein_field_mysql)}, {is_vegan_field_mysql}, {is_vegetarian_field_mysql}," \
                      f" {is_lactose_free_field_mysql}, {is_gluten_free_field_mysql}" \
                      f" FROM {food_ingredients_table_mysql} JOIN {dish_ingredients_table_mysql}" \
                      f" ON ({food_ingredients_table_mysql}.{ingredient_name_field_mysql} =" \
-                     f" {dish_ingredients_table_mysql}.{ingredient_name_field_mysql})) as joined_table" \
+                     f" {dish_ingredients_table_mysql}.{ingredient_name_field_mysql})) AS joined_table" \
             f" GROUP BY {dish_name_field_mysql}" \
             f" HAVING {dish_name_field_mysql} LIKE %s"
     val = (f"{begin_name}%",)
-    check_none_arr = {"sum_fat": (max_fat, min_fat), "sum_carb": (max_carb, min_carb),
-                      "sum_fiber": (max_fiber, min_fiber), "sum_protein": (max_protein, min_protein)}
+
+    check_none_arr = {f"{fat_field_mysql}": fat, f"{carb_field_mysql}": carb,
+                      f"{fiber_field_mysql}": fiber, f"{protein_field_mysql}": protein}
     check_boolean_arr = {"bit_vegan": is_vegan, "bit_vegetarian": is_vegetarian,
                          "bit_gluten": is_gluten_free, "bit_lactose": is_lactose_free}
 
+    required_dict = {}
     for check_none in check_none_arr:
-        value_max = check_none_arr[check_none][0]
-        value_min = check_none_arr[check_none][1]
-        if value_max is not None:
-            query += f" AND {check_none} <= %s"
-            val += (value_max,)
-        if value_min is not None:
-            query += f" AND {check_none} >= %s"
-            val += (value_min,)
+        value = check_none_arr[check_none]
+        if value is not None:
+            query += f" AND {min_percent}*{sum_prefix(check_none)} <= %s"
+            val += (value,)
+            required_dict[check_none] = value
+        if value is not None and max_percent != math.inf:
+            query += f" AND %s <= {max_percent}*{sum_prefix(check_none)}"
+            val += (value,)
 
     for check_boolean in check_boolean_arr:
         boolean_value = check_boolean_arr[check_boolean]
@@ -164,7 +185,7 @@ def get_filtered_dishes_query(cursor, begin_name, max_fat, max_carb, max_fiber,
 
     error, dishes = mysql_getting_action(cursor, query, val, False)
 
-    return error, dishes
+    return error, dishes, required_dict
 
 def add_serving_prefix(string):
     return f"serving_{string}"
@@ -172,15 +193,16 @@ def add_serving_prefix(string):
 def convert_field_by_serving(field):
     return f"{field}/100*serving as {add_serving_prefix(field)}"
 
-def get_filtered_ingredients_query(cursor, begin_name, max_fat, max_carb, max_fiber,
-                                   max_protein, min_fat, min_carb, min_fiber,
-                                   min_protein, is_vegan, is_vegetarian,
-                                   is_lactose_free, is_gluten_free):
+def get_filtered_ingredients_query(cursor, begin_name, fat, carb, fiber,
+                                   protein, is_vegan, is_vegetarian,
+                                   is_lactose_free, is_gluten_free, min_percent, max_percent):
 
     query = f"SELECT {ingredient_name_field_mysql}, {is_liquid_field_mysql}," \
-            f" {convert_field_by_serving(fat_field_mysql)}," \
-            f" {convert_field_by_serving(carb_field_mysql)}, {convert_field_by_serving(fiber_field_mysql)}," \
-            f" {convert_field_by_serving(protein_field_mysql)} FROM {food_ingredients_table_mysql}" \
+            f" {fat_field_mysql}, {convert_field_by_serving(fat_field_mysql)}," \
+            f" {carb_field_mysql}, {convert_field_by_serving(carb_field_mysql)}," \
+            f" {fiber_field_mysql}, {convert_field_by_serving(fiber_field_mysql)}," \
+            f" {protein_field_mysql}, {convert_field_by_serving(protein_field_mysql)}" \
+            f" FROM {food_ingredients_table_mysql}" \
             f" WHERE {ingredient_name_field_mysql} LIKE %s"
     val = (f"{begin_name}%", )
 
@@ -193,66 +215,82 @@ def get_filtered_ingredients_query(cursor, begin_name, max_fat, max_carb, max_fi
         if boolean_value:
             query += f" AND {check_boolean} = 1"
 
-    check_none_arr = {f"{fat_field_mysql}": (max_fat, min_fat), f"{carb_field_mysql}": (max_carb, min_carb),
-                      f"{fiber_field_mysql}": (max_fiber, min_fiber),
-                      f"{protein_field_mysql}": (max_protein, min_protein)}
+    check_none_arr = {f"{fat_field_mysql}": fat, f"{carb_field_mysql}": carb,
+                      f"{fiber_field_mysql}": fiber, f"{protein_field_mysql}": protein}
     having_str = "HAVING"
 
+    required_dict = {}
     for check_none in check_none_arr:
-        value_max = check_none_arr[check_none][0]
-        value_min = check_none_arr[check_none][1]
+        value = check_none_arr[check_none]
         check_with_prefix = add_serving_prefix(check_none)
-        if value_max is not None:
-            query += f" {having_str} {check_with_prefix} <= %s"
-            val += (value_max,)
+        if value is not None:
+            query += f" {having_str} {check_with_prefix}*{min_percent} <= %s"
+            val += (value,)
             having_str = "AND"
-        if value_min is not None:
-            query += f" {having_str} {check_with_prefix} >= %s"
-            val += (value_min,)
-            having_str = "AND"
+            required_dict[check_none] = value
+        if value is not None and max_percent != math.inf:
+            query += f" AND %s <= {check_with_prefix}*{max_percent}"
+            val += (value,)
 
     error, ingredients = mysql_getting_action(cursor, query, val, False)
 
-    return error, ingredients
+    return error, ingredients, required_dict
 
-def make_dict_result(dishes, ingredients):
+def get_max_percent_amount(data, field_prefix, factor, required_dict):
+    result = math.inf
+    for element in required_dict:
+        field_name = f"{field_prefix}{element}"
+        curr_val = data[field_name]
+        required_val = required_dict[element]
+        curr_result = math.inf if curr_val == 0 else factor * required_val / curr_val
+        result = min(result, curr_result)
+    return result
+
+def make_dict_result(dishes, ingredients, required_dict):
     dishes_arr = []
     ingredients_arr = []
 
     for dish in dishes:
-        dishes_arr.append({dish_name_field_param: dish[dish_name_field_mysql]})
+        percent = get_max_percent_amount(dish, sum_prefix_string(), 1, required_dict)
+        dishes_arr.append({dish_name_field_param: dish[dish_name_field_mysql],
+                           dish_percent_field_param: percent})
 
     for ingredient in ingredients:
         ingredient_name = ingredient[ingredient_name_field_mysql]
         is_liquid = ingredient[is_liquid_field_mysql] == 1
+        amount = get_max_percent_amount(ingredient, "", 100, required_dict)
         ingredients_arr.append({ingredient_name_field_param: ingredient_name,
-                                is_liquid_field_param: is_liquid})
+                                is_liquid_field_param: is_liquid,
+                                ingredient_amount_field_param: amount})
 
     return {dishes_field_param: dishes_arr,
             ingredients_field_param: ingredients_arr}
 
-def get_filtered_foods(begin_name, max_fat, max_carb, max_fiber,
-                       max_protein, min_fat, min_carb, min_fiber,
-                       min_protein, is_vegan, is_vegetarian,
-                       is_lactose_free, is_gluten_free, include_dish, include_ingredient):
+def get_filtered_foods(begin_name, fat, carb, fiber,
+                       protein, is_vegan, is_vegetarian,
+                       is_lactose_free, is_gluten_free, include_dish, include_ingredient,
+                       min_percent, max_percent):
     dishes = []
     ingredients = []
     result = None
+    required_dict = None
 
     conn, cursor, error = get_mysql_cursor()
 
+    min_percent, max_percent = get_min_max_percent(min_percent, max_percent)
+
     if not error and include_dish:
-        error, dishes = get_filtered_dishes_query(cursor, begin_name,max_fat, max_carb, max_fiber,
-                                                  max_protein, min_fat, min_carb, min_fiber,
-                                                  min_protein, is_vegan, is_vegetarian,
-                                                  is_lactose_free, is_gluten_free)
+        error, dishes, required_dict = get_filtered_dishes_query(cursor, begin_name, fat, carb, fiber,
+                                                                 protein, is_vegan, is_vegetarian,
+                                                                 is_lactose_free, is_gluten_free,
+                                                                 min_percent, max_percent)
     if not error and include_ingredient:
-        error, ingredients = get_filtered_ingredients_query(cursor, begin_name,max_fat, max_carb, max_fiber,
-                                                       max_protein, min_fat, min_carb, min_fiber,
-                                                       min_protein, is_vegan, is_vegetarian,
-                                                       is_lactose_free, is_gluten_free)
+        error, ingredients, required_dict = get_filtered_ingredients_query(cursor, begin_name, fat, carb, fiber,
+                                                                           protein, is_vegan, is_vegetarian,
+                                                                           is_lactose_free, is_gluten_free,
+                                                                           min_percent, max_percent)
     if not error:
-        result = make_dict_result(dishes, ingredients)
+        result = make_dict_result(dishes, ingredients, required_dict)
 
     close_connection(conn, cursor)
     return error, result

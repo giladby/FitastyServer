@@ -78,7 +78,6 @@ def server_get_diet_diary(server):
 # get_diet_diaries REQUEST
 
 def server_get_diet_diaries(server):
-    found = False
     result = None
     qs = parse_qs(urlparse(server.path).query)
     error = username_field_param not in qs or len(qs) != 1
@@ -86,13 +85,12 @@ def server_get_diet_diaries(server):
     if not error:
         if not error:
             username = qs[username_field_param][0]
-            error, found, result = get_diet_diaries_names(username)
+            error, result = get_diet_diaries_names(username)
 
-    if not error and found:
+    if not error:
         send_json(server, result)
     else:
-        send_error(server,
-                   HTTPStatus.NOT_FOUND.value if not error else HTTPStatus.BAD_REQUEST.value)
+        send_error(server, HTTPStatus.BAD_REQUEST.value)
 
 
 # ======================================================================================================================
@@ -135,6 +133,7 @@ def server_update_diet_diary(server):
     found = False
     user_id = None
     prev_diet_diary_name = None
+    diet_diary_name = None
 
     qs = parse_qs(urlparse(server.path).query)
     if username_field_param in qs and prev_diet_diary_name_field_param in qs or len(qs) == 2:
@@ -150,8 +149,10 @@ def server_update_diet_diary(server):
         diet_diary_name = data[diet_diary_name_field_param]
         prev_diet_diary_name = qs[prev_diet_diary_name_field_param][0]
         username = qs[username_field_param][0]
-        if diet_diary_name != prev_diet_diary_name:
-            user_id, found, error = check_diet_diary(diet_diary_name, username)
+        user_id, found, error = check_diet_diary(diet_diary_name, username)
+
+    if not error:
+        found = found and prev_diet_diary_name != diet_diary_name
 
     if not error and not found:
         error = insert_update_diet_diary_by_data(data, user_id, prev_diet_diary_name, False)
