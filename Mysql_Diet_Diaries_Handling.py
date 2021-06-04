@@ -1,5 +1,6 @@
 from Mysql_Connection_General import *
 from Macros import *
+# from Machine_Learning import *
 
 # ======================================================================================================================
 # check_diet_diary QUERY
@@ -8,17 +9,16 @@ def check_diet_diary_query(cursor, diet_diary_name, username):
     found = False
     user_id = None
 
-    checking_query = f"SELECT {id_field_mysql},{diet_diary_name_field_mysql}" \
-                     f" FROM {users_table_mysql} LEFT JOIN {diet_diaries_table_mysql}" \
-                     f" ON {users_table_mysql}.{id_field_mysql} = {diet_diaries_table_mysql}.{id_owner_field_mysql}" \
+    checking_query = f"SELECT * FROM {users_table_mysql} LEFT JOIN {diet_diaries_table_mysql}" \
+                     f" ON {users_table_mysql}.{id_field_mysql} = {diet_diaries_table_mysql}.{user_id_field_mysql}" \
                      f" WHERE {username_field_mysql} = %s"
     val = (username,)
 
     error, result = mysql_getting_action(cursor, checking_query, val, False)
-    error = error or not result
+    error = error or result is None
     if not error:
         for record in result:
-            user_id = record[id_field_mysql]
+            user_id = record[f"{users_table_mysql}.{id_field_mysql}"]
             if record[diet_diary_name_field_mysql] == diet_diary_name:
                 found = True
                 break
@@ -27,19 +27,19 @@ def check_diet_diary_query(cursor, diet_diary_name, username):
 
 def check_diet_diary(diet_diary_name, username):
     conn, cursor, error = get_mysql_cursor()
-    user_id = None
+    record = None
     found = False
     if not error:
-        user_id, found, error = check_diet_diary_query(cursor, diet_diary_name, username)
+        record, found, error = check_diet_diary_query(cursor, diet_diary_name, username)
     close_connection(conn, cursor)
-    return user_id, found, error
+    return record, found, error
 
 # ======================================================================================================================
 # insert_diet_diary QUERY
 
 def insert_main_diet_diary_query(cursor, diet_diary_name, user_id):
     query = f"INSERT INTO {diet_diaries_table_mysql}" \
-            f" ({diet_diary_name_field_mysql},{id_owner_field_mysql}) VALUES (%s,%s)"
+            f" ({diet_diary_name_field_mysql},{user_id_field_mysql}) VALUES (%s,%s)"
     val = (diet_diary_name, user_id)
     cursor.execute(query, val)
 
@@ -53,35 +53,64 @@ def insert_diet_diary_meal_query(cursor, diet_diary_id, meal_id):
 
     return cursor.lastrowid
 
-def insert_meal_dish_query(cursor, meal_public_id, dishes, dish_name):
+def insert_meal_dish_query(cursor, meal_public_id, dishes, dish_name, all_dishes):
     percent = dishes[dish_name]
-    query = f"INSERT INTO {meal_dishes_table_mysql}" \
-            f" ({meal_public_id_field_mysql},{dish_name_field_mysql},{dish_percent_field_mysql})" \
-            f" VALUES (%s,%s,%s)"
-    val = (meal_public_id, dish_name, percent)
-    cursor.execute(query, val)
 
-def insert_meal_ingredient_query(cursor, meal_public_id, ingredients, ingredient_name):
-    amount = ingredients[ingredient_name]
-    query = f"INSERT INTO {meal_ingredients_table_mysql}" \
-            f" ({meal_public_id_field_mysql},{ingredient_name_field_mysql},{ingredient_amount_field_mysql})" \
-            f" VALUES (%s,%s,%s)"
-    val = (meal_public_id, ingredient_name, amount)
+    total = percent
+    if dish_name in all_dishes:
+        total += all_dishes[dish_name]
+    all_dishes[dish_name] = total
+
+    query = f"INSERT INTO {meal_dishes_table_mysql}" \
+            f" ({meal_public_id_field_mysql},{dish_id_field_mysql},{dish_percent_field_mysql})" \
+            f" SELECT %s,{dishes_table_mysql}.{id_field_mysql},%s" \
+            f" FROM {dishes_table_mysql} WHERE {dish_name_field_mysql} = %s"
+    val = (meal_public_id, percent, dish_name)
+
     cursor.execute(query, val)
+    return cursor.lastrowid, cursor.rowcount == 0
+
+def insert_meal_ingredient_query(cursor, meal_public_id, ingredients, ingredient_name, all_ingredients):
+    amount = ingredients[ingredient_name]
+
+    total = amount
+    if ingredient_name in all_ingredients:
+        total += all_ingredients[ingredient_name]
+    all_ingredients[ingredient_name] = total
+
+    query = f"INSERT INTO {meal_ingredients_table_mysql}" \
+            f" ({meal_public_id_field_mysql},{ingredient_id_field_mysql},{ingredient_amount_field_mysql})" \
+            f" SELECT %s,{food_ingredients_table_mysql}.{id_field_mysql},%s" \
+            f" FROM {food_ingredients_table_mysql} WHERE {ingredient_name_field_mysql} = %s"
+    val = (meal_public_id, amount, ingredient_name)
+
+    cursor.execute(query, val)
+    return cursor.lastrowid, cursor.rowcount == 0
 
 def insert_diet_diary_transaction_func(cursor, args):
     user_id = args[0]
     diet_diary_name = args[1]
     meals_dict = args[2]
+    error = False
+    # error, last_records = get_last_record(cursor, user_id)
+    all_dishes = {}
+    all_ingredients = {}
+
+    if error:
+        raise ValueError()
 
     diet_diary_id = insert_main_diet_diary_query(cursor, diet_diary_name, user_id)
     for meal_id in meals_dict:
         meal_public_id = insert_diet_diary_meal_query(cursor, diet_diary_id, meal_id)
         dishes, ingredients = meals_dict[meal_id]
         for dish_name in dishes:
-            insert_meal_dish_query(cursor, meal_public_id, dishes, dish_name)
+            if insert_meal_dish_query(cursor, meal_public_id, dishes, dish_name, all_dishes):
+                raise ValueError()
         for ingredient_name in ingredients:
-            insert_meal_ingredient_query(cursor, meal_public_id, ingredients, ingredient_name)
+            if insert_meal_ingredient_query(cursor, meal_public_id, ingredients, ingredient_name, all_ingredients):
+                raise ValueError()
+
+
 
 def insert_diet_diary_query(conn, cursor, user_id, diet_diary_name, meals_dict):
     return transaction_execute(conn, cursor, insert_diet_diary_transaction_func,
@@ -221,7 +250,7 @@ def get_diet_diary_dishes_query(cursor, diet_diary_name, username, meals_info):
     dishes = {}
 
     query = f"SELECT {meal_id_field_mysql}," \
-            f" {meal_dishes_table_mysql}.{dish_name_field_mysql} AS {dish_name_field_mysql}," \
+            f" {dishes_table_mysql}.{dish_name_field_mysql} AS {dish_name_field_mysql}," \
             f" {dish_percent_field_mysql}," \
             f" SUM({fat_field_mysql}*{ingredient_amount_field_mysql}*{dish_percent_field_mysql}/100) AS" \
             f" {calc_prefix(fat_field_mysql)}," \
@@ -231,22 +260,22 @@ def get_diet_diary_dishes_query(cursor, diet_diary_name, username, meals_info):
             f" {calc_prefix(fiber_field_mysql)}," \
             f" SUM({protein_field_mysql}*{ingredient_amount_field_mysql}*{dish_percent_field_mysql}/100) AS" \
             f" {calc_prefix(protein_field_mysql)}" \
-            f" FROM {diet_diaries_table_mysql}" \
-            f" JOIN {diet_diary_meals_table_mysql}" \
-            f" ON {diet_diaries_table_mysql}.{diet_diary_id_field_mysql} =" \
+            f" FROM {diet_diaries_table_mysql} JOIN {diet_diary_meals_table_mysql}" \
+            f" ON {diet_diaries_table_mysql}.{id_field_mysql} =" \
             f" {diet_diary_meals_table_mysql}.{diet_diary_id_field_mysql}" \
             f" JOIN {meal_dishes_table_mysql}" \
-            f" ON {diet_diary_meals_table_mysql}.{meal_public_id_field_mysql} =" \
+            f" ON {diet_diary_meals_table_mysql}.{id_field_mysql} =" \
             f" {meal_dishes_table_mysql}.{meal_public_id_field_mysql}" \
+            f" JOIN {dishes_table_mysql}" \
+            f" ON {dishes_table_mysql}.{id_field_mysql} = {meal_dishes_table_mysql}.{dish_id_field_mysql}" \
             f" JOIN {dish_ingredients_table_mysql}" \
-            f" ON {meal_dishes_table_mysql}.{dish_name_field_mysql} =" \
-            f" {dish_ingredients_table_mysql}.{dish_name_field_mysql}" \
+            f" ON {meal_dishes_table_mysql}.{dish_id_field_mysql} =" \
+            f" {dish_ingredients_table_mysql}.{dish_id_field_mysql}" \
             f" JOIN {food_ingredients_table_mysql}" \
-            f" ON {dish_ingredients_table_mysql}.{ingredient_name_field_mysql} =" \
-            f" {food_ingredients_table_mysql}.{ingredient_name_field_mysql}" \
+            f" ON {dish_ingredients_table_mysql}.{ingredient_id_field_mysql} =" \
+            f" {food_ingredients_table_mysql}.{id_field_mysql}" \
             f" JOIN {users_table_mysql}" \
-            f" ON {diet_diaries_table_mysql}.{id_owner_field_mysql} =" \
-            f" {users_table_mysql}.{id_field_mysql}" \
+            f" ON {diet_diaries_table_mysql}.{user_id_field_mysql} = {users_table_mysql}.{id_field_mysql}" \
             f" WHERE {diet_diary_name_field_mysql} = %s AND {username_field_mysql} = %s" \
             f" GROUP BY {meal_id_field_mysql}, {dish_name_field_mysql}"
     val = (diet_diary_name, username)
@@ -283,7 +312,7 @@ def get_diet_diary_ingredients_query(cursor, diet_diary_name, username, meals_in
     ingredients = {}
 
     query = f"SELECT {meal_id_field_mysql}," \
-            f" {meal_ingredients_table_mysql}.{ingredient_name_field_mysql} AS {ingredient_name_field_mysql}," \
+            f" {food_ingredients_table_mysql}.{ingredient_name_field_mysql} AS {ingredient_name_field_mysql}," \
             f" {ingredient_amount_field_mysql}, {is_liquid_field_mysql}," \
             f" SUM({fat_field_mysql}*{ingredient_amount_field_mysql}/100) AS" \
             f" {calc_prefix(fat_field_mysql)}," \
@@ -295,16 +324,16 @@ def get_diet_diary_ingredients_query(cursor, diet_diary_name, username, meals_in
             f" {calc_prefix(protein_field_mysql)}" \
             f" FROM {diet_diaries_table_mysql}" \
             f" JOIN {diet_diary_meals_table_mysql}" \
-            f" ON {diet_diaries_table_mysql}.{diet_diary_id_field_mysql} =" \
+            f" ON {diet_diaries_table_mysql}.{id_field_mysql} =" \
             f" {diet_diary_meals_table_mysql}.{diet_diary_id_field_mysql}" \
             f" JOIN {meal_ingredients_table_mysql}" \
-            f" ON {diet_diary_meals_table_mysql}.{meal_public_id_field_mysql} =" \
+            f" ON {diet_diary_meals_table_mysql}.{id_field_mysql} =" \
             f" {meal_ingredients_table_mysql}.{meal_public_id_field_mysql}" \
             f" JOIN {food_ingredients_table_mysql}" \
-            f" ON {meal_ingredients_table_mysql}.{ingredient_name_field_mysql} =" \
-            f" {food_ingredients_table_mysql}.{ingredient_name_field_mysql}" \
+            f" ON {meal_ingredients_table_mysql}.{ingredient_id_field_mysql} =" \
+            f" {food_ingredients_table_mysql}.{id_field_mysql}" \
             f" JOIN {users_table_mysql}" \
-            f" ON {diet_diaries_table_mysql}.{id_owner_field_mysql} =" \
+            f" ON {diet_diaries_table_mysql}.{user_id_field_mysql} =" \
             f" {users_table_mysql}.{id_field_mysql}" \
             f" WHERE {diet_diary_name_field_mysql} = %s AND {username_field_mysql} = %s" \
             f" GROUP BY {meal_id_field_mysql}, {ingredient_name_field_mysql}"
@@ -373,9 +402,9 @@ def make_diet_diaries_dict(records, diet_diaries):
 def get_diet_diaries_query(cursor, username):
     diet_diaries = []
 
-    query = f"SELECT {id_field_mysql}, {diet_diary_name_field_mysql}" \
+    query = f"SELECT {users_table_mysql}.{id_field_mysql}, {diet_diary_name_field_mysql}" \
             f" FROM {users_table_mysql} LEFT JOIN {diet_diaries_table_mysql}" \
-            f" ON {diet_diaries_table_mysql}.{id_owner_field_mysql} = {users_table_mysql}.{id_field_mysql}" \
+            f" ON {diet_diaries_table_mysql}.{user_id_field_mysql} = {users_table_mysql}.{id_field_mysql}" \
             f" WHERE {username_field_mysql} = %s"
     val = (username,)
 
@@ -398,58 +427,68 @@ def get_diet_diaries_names(username):
 # ======================================================================================================================
 # delete_diet_diary QUERY
 
-def delete_diet_diary_main(cursor, diet_diary_name, user_id):
+def delete_diet_diary_main(cursor, diet_diary_name, user_id, all_diaries):
     query = f"DELETE FROM {diet_diaries_table_mysql}" \
-            f" WHERE {id_owner_field_mysql} = %s AND {diet_diary_name_field_mysql} = %s"
-    val = (user_id, diet_diary_name)
+            f" WHERE {user_id_field_mysql} = %s"
+    val = (user_id,)
+    if not all_diaries:
+        query += "AND {diet_diary_name_field_mysql} = %s"
+        val += (diet_diary_name,)
     cursor.execute(query, val)
 
-def meals_join_diearies():
-    return f"JOIN {diet_diaries_table_mysql}" \
-           f" ON ({diet_diaries_table_mysql}.{diet_diary_id_field_mysql} =" \
-           f" {diet_diary_meals_table_mysql}.{diet_diary_id_field_mysql})" \
-           f" WHERE {diet_diary_name_field_mysql} = %s" \
-           f" AND {id_owner_field_mysql} = %s"
+def meals_join_diaries(all_diaries):
+    query = f"JOIN {diet_diaries_table_mysql}" \
+            f" ON {diet_diaries_table_mysql}.{id_field_mysql} =" \
+            f" {diet_diary_meals_table_mysql}.{diet_diary_id_field_mysql}" \
+            f" WHERE {user_id_field_mysql} = %s"
+    if not all_diaries:
+        query += f" AND {diet_diary_name_field_mysql} = %s"
+    return query
 
-def delete_meal_component(cursor, diet_diary_name, user_id, table_name):
+def delete_meal_component(cursor, diet_diary_name, user_id, table_name, all_diaries):
     query = f"DELETE {table_name} FROM {table_name}" \
             f" JOIN {diet_diary_meals_table_mysql}" \
-            f" ON ({table_name}.{meal_public_id_field_mysql} =" \
-            f" {diet_diary_meals_table_mysql}.{meal_public_id_field_mysql}) " + meals_join_diearies()
+            f" ON {table_name}.{meal_public_id_field_mysql} =" \
+            f" {diet_diary_meals_table_mysql}.{id_field_mysql} " + meals_join_diaries(all_diaries)
 
-    val = (diet_diary_name, user_id)
+    val = (user_id,)
+    if not all_diaries:
+        val += (diet_diary_name,)
     cursor.execute(query, val)
 
-def delete_meal_dishes(cursor, diet_diary_name, user_id):
-    delete_meal_component(cursor, diet_diary_name, user_id, meal_dishes_table_mysql)
+def delete_meal_dishes(cursor, diet_diary_name, user_id, all_diaries):
+    delete_meal_component(cursor, diet_diary_name, user_id, meal_dishes_table_mysql, all_diaries)
 
-def delete_meal_ingredients(cursor, diet_diary_name, user_id):
-    delete_meal_component(cursor, diet_diary_name, user_id, meal_ingredients_table_mysql)
+def delete_meal_ingredients(cursor, diet_diary_name, user_id, all_diaries):
+    delete_meal_component(cursor, diet_diary_name, user_id, meal_ingredients_table_mysql, all_diaries)
 
-def delete_meals(cursor, diet_diary_name, user_id):
+def delete_meals(cursor, diet_diary_name, user_id, all_diaries):
     query = f"DELETE {diet_diary_meals_table_mysql}" \
-            f" FROM {diet_diary_meals_table_mysql} " + meals_join_diearies()
+            f" FROM {diet_diary_meals_table_mysql} " + meals_join_diaries(all_diaries)
 
-    val = (diet_diary_name, user_id)
+    val = (user_id,)
+    if not all_diaries:
+        val += (diet_diary_name,)
     cursor.execute(query, val)
 
 def delete_diet_diary_transaction_func(cursor, args):
     diet_diary_name = args[0]
     user_id = args[1]
+    all_diaries = args[2]
 
-    delete_meal_dishes(cursor, diet_diary_name, user_id)
-    delete_meal_ingredients(cursor, diet_diary_name, user_id)
-    delete_meals(cursor, diet_diary_name, user_id)
-    delete_diet_diary_main(cursor, diet_diary_name, user_id)
+    delete_meal_dishes(cursor, diet_diary_name, user_id, all_diaries)
+    delete_meal_ingredients(cursor, diet_diary_name, user_id, all_diaries)
+    delete_meals(cursor, diet_diary_name, user_id, all_diaries)
+    delete_diet_diary_main(cursor, diet_diary_name, user_id, all_diaries)
 
-def delete_diet_diary_query(conn, cursor, diet_diary_name, user_id):
+def delete_diet_diary_query(conn, cursor, diet_diary_name, user_id, all_diaries):
     return transaction_execute(conn, cursor, delete_diet_diary_transaction_func,
-                               (diet_diary_name, user_id))
+                               (diet_diary_name, user_id, all_diaries))
 
 def delete_diet_diary(diet_diary_name, user_id):
     conn, cursor, error = get_mysql_cursor()
     if not error:
-        error = delete_diet_diary_query(conn, cursor, diet_diary_name, user_id)
+        error = delete_diet_diary_query(conn, cursor, diet_diary_name, user_id, False)
     close_connection(conn, cursor)
     return error
 
@@ -462,7 +501,7 @@ def update_diet_diary_transaction_func(cursor, args):
     user_id = args[2]
     meals_dict = args[3]
 
-    delete_diet_diary_transaction_func(cursor, (prev_diet_diary_name, user_id))
+    delete_diet_diary_transaction_func(cursor, (prev_diet_diary_name, user_id, False))
     insert_diet_diary_transaction_func(cursor, (user_id, diet_diary_name, meals_dict))
 
 def update_diet_diary_query(conn, cursor, prev_diet_diary_name, diet_diary_name, user_id, meals_dict):

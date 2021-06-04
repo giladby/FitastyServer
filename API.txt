@@ -2,6 +2,22 @@ http://3.142.151.208:8080
 
 ==================================================================================================================================================================
 
+GET
+
+.../users/get_countries
+
+	input: None
+	output:
+		fail -> status "bad_request"(400)
+		success -> status "OK"(200)	+
+		{
+		    "countries":	 [
+                ...
+            ]
+		}
+
+==================================================================================================================================================================
+
 POST
 
 .../users/insert_account
@@ -14,14 +30,19 @@ POST
 			"is_male" : (boolean)
 			"height" : (int)
 			"weight" : (int)
+            "country_name" : (str)
 			"activity_factor" : (double)
 			"diet_type" : {"carb" : (double), "fat" : (double), "protein" : (double)}
 			"weight_goal" : (double)
+            "is_vegan" : (boolean)
+			"is_vegetarian" : (boolean)
+			"is_gluten_free" : (boolean)
+			"is_lactose_free" : (boolean)
 		}
 	output:
 		fail -> status "bad_request"(400)
-		success -> status "OK"(200)	+ 
-			{ 
+		success -> status "OK"(200)	+
+			{
 				"name_exist" : (boolean)
 			}
 
@@ -50,14 +71,19 @@ GET
 		not found -> status "not found"(404)
 		success -> status "OK"(200)	+
 			{
-				"password" : (str)
-				"age" : (int)
-				"is_male" : (boolean)
-				"height" : (int)
-				"weight" : (int)
-				"activity_factor" : (double)
-				"diet_type" : {"carb" : (double), "fat" : (double), "protein" : (double)}
-				"weight_goal" : (double)
+                "password" : (str)
+                "age" : (int)
+                "is_male" : (boolean)
+                "height" : (int)
+                "weight" : (int)
+                "country_name" : (str)
+                "activity_factor" : (double)
+                "diet_type" : {"carb" : (double), "fat" : (double), "protein" : (double)}
+                "weight_goal" : (double)
+                "is_vegan" : (boolean)
+                "is_vegetarian" : (boolean)
+                "is_gluten_free" : (boolean)
+                "is_lactose_free" : (boolean)
 			}
 
 ==================================================================================================================================================================
@@ -92,10 +118,15 @@ PUT
 			"is_male" : (boolean)
 			"height" : (int)
 			"weight" : (int)
+            "country_name" : (str)
 			"activity_factor" : (double)
 			"diet_type" : {"carb" : (double), "fat" : (double), "protein" : (double)}
 			"weight_goal" : (double)
-	}
+            "is_vegan" : (boolean)
+			"is_vegetarian" : (boolean)
+			"is_gluten_free" : (boolean)
+			"is_lactose_free" : (boolean)
+        }
 	output:
 		fail -> status "bad_request"(400)
 		success -> status "OK"(200)	+

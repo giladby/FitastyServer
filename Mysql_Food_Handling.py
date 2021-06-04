@@ -33,10 +33,12 @@ def make_dish_info_dict(dish_name, mysql_user_records):
 
 def get_dish_info_query(cursor, dish_name):
     found = False
-    query = f"SELECT * FROM {dish_ingredients_table_mysql} JOIN {food_ingredients_table_mysql}" \
-            f" ON ({dish_ingredients_table_mysql}.{ingredient_name_field_mysql} =" \
-            f" {food_ingredients_table_mysql}.{ingredient_name_field_mysql})" \
-            f" WHERE {dish_name_field_mysql} = %s"
+    query = f"SELECT * FROM {dish_ingredients_table_mysql} JOIN {dishes_table_mysql}" \
+            f" ON {dish_ingredients_table_mysql}.{dish_id_field_mysql} = {dishes_table_mysql}.{id_field_mysql}" \
+            f" JOIN {food_ingredients_table_mysql}" \
+            f" ON {dish_ingredients_table_mysql}.{ingredient_id_field_mysql} =" \
+            f" {food_ingredients_table_mysql}.{id_field_mysql}" \
+            f" WHERE {dishes_table_mysql}.{dish_name_field_mysql} = %s"
     val = (dish_name,)
     error, result = mysql_getting_action(cursor, query, val, False)
     if not error and result:
@@ -124,8 +126,8 @@ def insert_ingredient(name, is_liquid, fat, carbs, fiber, protein,
 # get_foods QUERY
 
 def get_min_max_percent(min_input, max_input):
-    max_result = max_input if max_input else math.inf
-    min_result = min_input if min_input else 0
+    max_result = max_input if max_input is not None else math.inf
+    min_result = min_input if min_input is not None else 0
 
     return min_result, max_result
 
@@ -156,8 +158,10 @@ def get_filtered_dishes_query(cursor, begin_name, fat, carb, fiber,
                      f" {convert_amount(protein_field_mysql)}, {is_vegan_field_mysql}, {is_vegetarian_field_mysql}," \
                      f" {is_lactose_free_field_mysql}, {is_gluten_free_field_mysql}" \
                      f" FROM {food_ingredients_table_mysql} JOIN {dish_ingredients_table_mysql}" \
-                     f" ON ({food_ingredients_table_mysql}.{ingredient_name_field_mysql} =" \
-                     f" {dish_ingredients_table_mysql}.{ingredient_name_field_mysql})) AS joined_table" \
+                     f" ON {food_ingredients_table_mysql}.{id_field_mysql} =" \
+                     f" {dish_ingredients_table_mysql}.{ingredient_id_field_mysql}" \
+                     f" JOIN {dishes_table_mysql} ON {dishes_table_mysql}.{id_field_mysql} =" \
+                     f" {dish_ingredients_table_mysql}.{dish_id_field_mysql}) AS joined_table" \
             f" GROUP BY {dish_name_field_mysql}" \
             f" HAVING {dish_name_field_mysql} LIKE %s"
     val = (f"{begin_name}%",)
@@ -318,22 +322,34 @@ def check_dish(dish_name):
 # ======================================================================================================================
 # insert_dish QUERY
 
-def insert_dish_query(conn, cursor, dish_name, ingredients_amount_dict):
-    insertion_arr = []
-
+def insert_main_dish_query(cursor, dish_name):
     query = f"INSERT INTO {dishes_table_mysql} ({dish_name_field_mysql}) VALUES (%s)"
-    val = (dish_name, )
-    insertion_arr.append((query, val))
+    val = (dish_name,)
+    cursor.execute(query, val)
 
+    return cursor.lastrowid
+
+def insert_dish_ingredient_query(cursor, dish_id, ingredient, ingredients_amount):
+    query = f"INSERT INTO {dish_ingredients_table_mysql}" \
+            f" ({dish_id_field_mysql}, {ingredient_id_field_mysql}, {ingredient_amount_field_mysql})" \
+            f" SELECT %s,{food_ingredients_table_mysql}.{id_field_mysql}, %s" \
+            f" FROM {food_ingredients_table_mysql}" \
+            f" WHERE {food_ingredients_table_mysql}.{ingredient_name_field_mysql} = %s"
+    val = (dish_id, ingredients_amount, ingredient)
+    cursor.execute(query, val)
+
+def insert_dish_transaction_func(cursor, args):
+    dish_name = args[0]
+    ingredients_amount_dict = args[1]
+
+    dish_id = insert_main_dish_query(cursor, dish_name)
     for ingredient in ingredients_amount_dict:
         amount = ingredients_amount_dict[ingredient]
-        query = f"INSERT INTO {dish_ingredients_table_mysql} ({dish_name_field_mysql}," \
-                f" {ingredient_name_field_mysql}, {ingredient_amount_field_mysql}) VALUES" \
-                f" (%s, %s, %s)"
-        val = (dish_name, ingredient, amount)
-        insertion_arr.append((query, val))
+        insert_dish_ingredient_query(cursor, dish_id, ingredient, amount)
 
-    return mysql_multiple_action(conn, cursor, insertion_arr)
+def insert_dish_query(conn, cursor, name, ingredients_amount_dict):
+    return transaction_execute(conn, cursor, insert_dish_transaction_func,
+                               (name, ingredients_amount_dict))
 
 def add_ingredient_amount(ingredients_amount_dict, ingredient, amount):
     curr_amount = 0
@@ -344,22 +360,38 @@ def add_ingredient_amount(ingredients_amount_dict, ingredient, amount):
 
     return ingredients_amount_dict
 
-def get_ingredients_amount_of_dish(cursor, dish_name, percent, ingredients_amount_dict):
-    found = False
-    query = f"SELECT {ingredient_name_field_mysql}," \
-            f"{ingredient_amount_field_mysql} * {percent} as {ingredient_amount_field_mysql}" \
-            f" FROM {dish_ingredients_table_mysql} WHERE {dish_name_field_mysql} = %s"
-    val = (dish_name,)
+def get_prepared_string(size):
+    result = "%s"
+    for i in range(size - 1):
+        result += ", %s"
+    return result
+
+def get_ingredients_amount_of_dishes(cursor, dishes_percents, dishes_tuple, ingredients_amount_dict):
+    dishes_dict_cpy = dishes_percents.copy()
+    query = f"SELECT {dish_name_field_mysql}, {ingredient_name_field_mysql}, {ingredient_amount_field_mysql}" \
+            f" FROM {dish_ingredients_table_mysql} JOIN {food_ingredients_table_mysql}" \
+            f" ON {dish_ingredients_table_mysql}.{ingredient_id_field_mysql} =" \
+            f" {food_ingredients_table_mysql}.{id_field_mysql}" \
+            f" JOIN {dishes_table_mysql}" \
+            f" ON {dish_ingredients_table_mysql}.{dish_id_field_mysql} =" \
+            f" {dishes_table_mysql}.{id_field_mysql}" \
+            f" WHERE {dish_name_field_mysql} IN({get_prepared_string(len(dishes_tuple))})"
+    val = dishes_tuple
     error, result = mysql_getting_action(cursor, query, val, False)
+
     if not error and result:
-        found = True
         for row in result:
+            dish_name = row[dish_name_field_mysql]
             ingredient = row[ingredient_name_field_mysql]
-            amount = row[ingredient_amount_field_mysql]
+            amount = row[ingredient_amount_field_mysql] * dishes_percents[dish_name]
+            if dish_name in dishes_dict_cpy:
+                dishes_dict_cpy.pop(dish_name)
             ingredients_amount_dict = \
                 add_ingredient_amount(ingredients_amount_dict, ingredient, amount)
 
-    return error, found, ingredients_amount_dict
+    error = error or len(dishes_dict_cpy) > 0
+
+    return error, ingredients_amount_dict
 
 def check_dish_params(dish):
     return isinstance(dish, dict) and dish_name_field_param in dish and \
@@ -367,19 +399,20 @@ def check_dish_params(dish):
 
 def fill_ingredients_dict_by_dishes(cursor, dishes, ingredients_amount_dict):
     error = not isinstance(dishes, list)
+    dishes_percents = {}
+    dishes_tuple = None
     for dish in dishes:
         if error:
             break
-        error = True
-        found = False
-        if check_dish_params(dish):
-            error = False
+        error = not check_dish_params(dish)
         if not error:
             dish_name = dish[dish_name_field_param]
             percent = dish[dish_percent_field_param]
-            error, found, ingredients_amount_dict = \
-                get_ingredients_amount_of_dish(cursor, dish_name, percent, ingredients_amount_dict)
-        error = error or not found
+            dishes_percents[dish_name] = percent
+            dishes_tuple = dishes_tuple + (dish_name,) if dishes_tuple else (dish_name,)
+    if not error:
+        error, ingredients_amount_dict = get_ingredients_amount_of_dishes(cursor, dishes_percents, dishes_tuple,
+                                                                          ingredients_amount_dict)
 
     return error, ingredients_amount_dict
 
@@ -392,9 +425,7 @@ def fill_ingredients_dict_by_ingredients(ingredients, ingredients_amount_dict):
     for ingredient in ingredients:
         if error:
             break
-        error = True
-        if check_ingredient_params(ingredient):
-            error = False
+        error = not check_ingredient_params(ingredient)
         if not error:
             ingredient_name = ingredient[ingredient_name_field_param]
             amount = ingredient[ingredient_amount_field_param]

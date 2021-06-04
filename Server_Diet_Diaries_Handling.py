@@ -99,7 +99,7 @@ def server_get_diet_diaries(server):
 def server_delete_diet_diary(server):
     print("in delete_diet_diary")
     found = False
-    user_id = None
+    record = None
     diet_diary_name= None
     error = True
     code = HTTPStatus.OK
@@ -111,9 +111,10 @@ def server_delete_diet_diary(server):
     if not error:
         username = qs[username_field_param][0]
         diet_diary_name = qs[diet_diary_name_field_param][0]
-        user_id, found, error = check_diet_diary(diet_diary_name, username)
+        record, found, error = check_diet_diary(diet_diary_name, username)
 
     if not error and found:
+        user_id = record[f"{users_table_mysql}.{id_field_mysql}"]
         error = delete_diet_diary(diet_diary_name, user_id)
 
     if error:
@@ -131,7 +132,7 @@ def server_update_diet_diary(server):
     error = True
     data = None
     found = False
-    user_id = None
+    record = None
     prev_diet_diary_name = None
     diet_diary_name = None
 
@@ -149,13 +150,13 @@ def server_update_diet_diary(server):
         diet_diary_name = data[diet_diary_name_field_param]
         prev_diet_diary_name = qs[prev_diet_diary_name_field_param][0]
         username = qs[username_field_param][0]
-        user_id, found, error = check_diet_diary(diet_diary_name, username)
+        record, found, error = check_diet_diary(diet_diary_name, username)
 
     if not error:
         found = found and prev_diet_diary_name != diet_diary_name
 
     if not error and not found:
-        error = insert_update_diet_diary_by_data(data, user_id, prev_diet_diary_name, False)
+        error = insert_update_diet_diary_by_data(data, record, prev_diet_diary_name, False)
 
     if not error:
         send_json(server, {name_exist_field_param: found})

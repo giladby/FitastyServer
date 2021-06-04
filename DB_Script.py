@@ -123,6 +123,7 @@ def run_script():
             continue
 
         rowsString.append((food, "1" if liquid else "0", fat, carbs, fiber, protein, "1", "1", "1", "1", amount))
+        print("done")
 
     with open("foods.csv", mode='w', newline='', encoding='utf-8') as csv_file:
         fieldnames = ["name", "liquid", "fat", "carbs", "fiber", "protein", "vegan", "vegetarian", "gluten-free",

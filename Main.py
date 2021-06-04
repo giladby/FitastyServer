@@ -1,7 +1,10 @@
 from http.server import HTTPServer
 from Server_Main import *
+from threading import Lock
 
 port = 8080
+samples_mutex = Lock()
+model_mutex = Lock()
 
 def run():
     server_address = ('', port)

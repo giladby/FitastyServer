@@ -15,7 +15,7 @@ def server_check_username(server):
     qs = parse_qs(urlparse(server.path).query)
     if username_field_param in qs and len(qs) == 1:
         username = qs[username_field_param][0]
-        result, error = check_user(username, False, None)
+        _, result, error = check_user(username, False, None)
     if not error:
         send_json(server, {name_exist_field_param: result})
     else:
@@ -33,7 +33,7 @@ def server_log_in(server):
     if username_field_param in qs and password_field_param in qs and len(qs) == 2:
         username = qs[username_field_param][0]
         password = qs[password_field_param][0]
-        result, error = check_user(username, True, password)
+        _, result, error = check_user(username, True, password)
     if not error:
         send_json(server, {found_field_param: result})
     else:
@@ -49,16 +49,23 @@ def insert_update_user_by_data(data, insert, prev_username):
     is_male = data[is_male_field_param]
     height = data[height_field_param]
     weight = data[weight_field_param]
+    country = data[country_field_param]
     activity_factor = data[activity_factor_field_param]
     diet_type = data[diet_type_field_param]
     weight_goal = data[weight_goal_field_param]
+    is_vegan = data[is_vegan_field_param]
+    is_vegetarian = data[is_vegetarian_field_param]
+    is_lactose_free = data[is_lactose_free_field_param]
+    is_gluten_free = data[is_gluten_free_field_param]
 
     if insert:
         error = insert_user(username, password, age, is_male, height, weight,
-                            activity_factor, diet_type, weight_goal)
+                            activity_factor, diet_type, weight_goal, country, is_vegan,
+                            is_vegetarian, is_lactose_free, is_gluten_free)
     else:
         error = update_user(prev_username, username, password, age, is_male, height,
-                            weight, activity_factor, diet_type, weight_goal)
+                            weight, activity_factor, diet_type, weight_goal, country, is_vegan,
+                            is_vegetarian, is_lactose_free, is_gluten_free)
 
     return error
 
@@ -67,8 +74,12 @@ def check_insert_update_account_json_params(data):
     if data and password_field_param in data and username_field_param in data and \
             age_field_param in data and is_male_field_param in data and \
             height_field_param in data and weight_field_param in data and \
+            country_field_param in data and \
             activity_factor_field_param in data and diet_type_field_param in data and \
-            weight_goal_field_param in data and len(data) == 9:
+            weight_goal_field_param in data and \
+            is_lactose_free_field_param and is_vegetarian_field_param and \
+            is_gluten_free_field_param and is_vegan_field_param and \
+            len(data) == 14:
         error = False
     return error
 
@@ -83,7 +94,7 @@ def server_insert_account(server):
 
     if not error:
         username = data[username_field_param]
-        found, error = check_user(username, False, None)
+        _, found, error = check_user(username, False, None)
 
     if not error and not found:
         error = insert_update_user_by_data(data, True, None)
@@ -115,7 +126,7 @@ def server_update_account(server):
         prev_username = qs[prev_username_field_param][0]
         username = data[username_field_param]
         if username != prev_username:
-            found, error = check_user(username, False, None)
+            _, found, error = check_user(username, False, None)
 
     if not error and not found:
         prev_username = qs[prev_username_field_param][0]
@@ -133,7 +144,7 @@ def server_delete_account(server):
     print("in delete_account")
     found = False
     error = True
-    username = None
+    user_id = None
     code = HTTPStatus.OK
 
     qs = parse_qs(urlparse(server.path).query)
@@ -142,10 +153,10 @@ def server_delete_account(server):
 
     if not error:
         username = qs[username_field_param][0]
-        found, error = check_user(username, False, None)
+        user_id, found, error = check_user(username, False, None)
 
     if not error and found:
-        error = delete_user(username)
+        error = delete_user(user_id)
 
     if error:
         code = HTTPStatus.BAD_REQUEST
