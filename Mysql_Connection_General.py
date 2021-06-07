@@ -83,6 +83,9 @@ def mysql_getting_action(cursor, query, val, single):
             error = True
     return error, result
 
+def mysql_get_data(cursor, query, single):
+    return mysql_getting_action(cursor, query, None, single)
+
 def check_query(cursor, checking_query, val):
     found = False
 

@@ -8,12 +8,15 @@ mysql_password = "123456"
 #mysql_database = "fitasty"
 mysql_database = "fitasty_demo"
 
-samples_file_path = ""
+samples_file_path = "samples.csv"
 
 name_exist_field_param = 'name_exist'
 found_field_param = 'found'
 
 # Continents and Countries Macros :
+# Params :
+countries_field_param = 'countries'
+
 # Mysql :
 id_field_mysql = 'id'
 continent_id_field_mysql = 'continent_id'

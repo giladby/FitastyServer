@@ -83,9 +83,8 @@ def server_get_diet_diaries(server):
     error = username_field_param not in qs or len(qs) != 1
 
     if not error:
-        if not error:
-            username = qs[username_field_param][0]
-            error, result = get_diet_diaries_names(username)
+        username = qs[username_field_param][0]
+        error, result = get_diet_diaries_names(username)
 
     if not error:
         send_json(server, result)

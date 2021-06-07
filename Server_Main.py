@@ -24,9 +24,10 @@ class Server(BaseHTTPRequestHandler):
         return {"/users/log_in": self.log_in,
                 "/users/check_username": self.check_username,
                 "/users/get_account_info": self.get_account_info,
+                "/users/get_countries": self.get_countries,
+                "/users/get_calorie_info": self.get_calorie_info,
                 "/foods/get_ingredient_info": self.get_ingredient_info,
                 "/foods/get_dish_info": self.get_dish_info,
-                "/users/get_calorie_info": self.get_calorie_info,
                 "/diet_diaries/get_diet_diary": self.get_diet_diary,
                 "/diet_diaries/get_diet_diaries": self.get_diet_diaries}
 
@@ -99,6 +100,9 @@ class Server(BaseHTTPRequestHandler):
 
     def insert_account(self):
         server_insert_account(self)
+
+    def get_countries(self):
+        server_get_countries(self)
 
     def operate_by_operations_dict(self, operations_dict):
         sub = urlparse(self.path).path

@@ -410,7 +410,7 @@ def fill_ingredients_dict_by_dishes(cursor, dishes, ingredients_amount_dict):
             percent = dish[dish_percent_field_param]
             dishes_percents[dish_name] = percent
             dishes_tuple = dishes_tuple + (dish_name,) if dishes_tuple else (dish_name,)
-    if not error:
+    if not error and len(dishes) > 0:
         error, ingredients_amount_dict = get_ingredients_amount_of_dishes(cursor, dishes_percents, dishes_tuple,
                                                                           ingredients_amount_dict)
 

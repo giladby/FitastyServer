@@ -2,6 +2,7 @@ from Mysql_Connection_General import *
 from Macros import *
 from Utils import *
 from Mysql_Diet_Diaries_Handling import delete_diet_diary_transaction_func
+from Machine_Learning import *
 
 # ======================================================================================================================
 # get_account_info QUERY
@@ -236,3 +237,28 @@ def check_user(username, check_user, password):
     result, found, error = check_existing(query, val)
     result = result[id_field_mysql] if not error and found else None
     return result,found, error
+
+# ======================================================================================================================
+# get_countries QUERY
+
+def get_countries_query(cursor):
+    countries = []
+
+    query = f"SELECT {country_field_mysql} FROM {countries_table_mysql}"
+
+    error, result = mysql_get_data(cursor, query, False)
+    if not error and result:
+        for record in result:
+            countries.append(record[country_field_mysql])
+        result = {f"{countries_field_param}": countries}
+
+    return error, result
+
+def get_countries():
+    result = None
+    conn, cursor, error = get_mysql_cursor()
+    get_last_record(cursor,None)
+    if not error:
+        error, result = get_countries_query(cursor)
+    close_connection(conn, cursor)
+    return error, result

@@ -204,3 +204,20 @@ def server_get_account_info(server):
     else:
         send_error(server,
                    HTTPStatus.NOT_FOUND.value if not error else HTTPStatus.BAD_REQUEST.value)
+
+# ======================================================================================================================
+# get_countries REQUEST
+
+def server_get_countries(server):
+    result = None
+    qs = parse_qs(urlparse(server.path).query)
+    error = len(qs) != 0
+
+    if not error:
+        error, result = get_countries()
+
+    if not error:
+        send_json(server, result)
+    else:
+        send_error(server, HTTPStatus.BAD_REQUEST.value)
+

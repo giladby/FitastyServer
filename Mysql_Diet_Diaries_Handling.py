@@ -9,7 +9,8 @@ def check_diet_diary_query(cursor, diet_diary_name, username):
     found = False
     user_id = None
 
-    checking_query = f"SELECT * FROM {users_table_mysql} LEFT JOIN {diet_diaries_table_mysql}" \
+    checking_query = f"SELECT {users_table_mysql}.{id_field_mysql}, {diet_diary_name_field_mysql}" \
+                     f" FROM {users_table_mysql} LEFT JOIN {diet_diaries_table_mysql}" \
                      f" ON {users_table_mysql}.{id_field_mysql} = {diet_diaries_table_mysql}.{user_id_field_mysql}" \
                      f" WHERE {username_field_mysql} = %s"
     val = (username,)
@@ -18,7 +19,7 @@ def check_diet_diary_query(cursor, diet_diary_name, username):
     error = error or result is None
     if not error:
         for record in result:
-            user_id = record[f"{users_table_mysql}.{id_field_mysql}"]
+            user_id = record[f"{id_field_mysql}"]
             if record[diet_diary_name_field_mysql] == diet_diary_name:
                 found = True
                 break
@@ -68,7 +69,7 @@ def insert_meal_dish_query(cursor, meal_public_id, dishes, dish_name, all_dishes
     val = (meal_public_id, percent, dish_name)
 
     cursor.execute(query, val)
-    return cursor.lastrowid, cursor.rowcount == 0
+    return cursor.rowcount == 0
 
 def insert_meal_ingredient_query(cursor, meal_public_id, ingredients, ingredient_name, all_ingredients):
     amount = ingredients[ingredient_name]
@@ -85,7 +86,7 @@ def insert_meal_ingredient_query(cursor, meal_public_id, ingredients, ingredient
     val = (meal_public_id, amount, ingredient_name)
 
     cursor.execute(query, val)
-    return cursor.lastrowid, cursor.rowcount == 0
+    return cursor.rowcount == 0
 
 def insert_diet_diary_transaction_func(cursor, args):
     user_id = args[0]
@@ -403,13 +404,13 @@ def get_diet_diaries_query(cursor, username):
     diet_diaries = []
 
     query = f"SELECT {users_table_mysql}.{id_field_mysql}, {diet_diary_name_field_mysql}" \
-            f" FROM {users_table_mysql} LEFT JOIN {diet_diaries_table_mysql}" \
+            f" FROM {users_table_mysql} JOIN {diet_diaries_table_mysql}" \
             f" ON {diet_diaries_table_mysql}.{user_id_field_mysql} = {users_table_mysql}.{id_field_mysql}" \
             f" WHERE {username_field_mysql} = %s"
     val = (username,)
 
     error, result = mysql_getting_action(cursor, query, val, False)
-    if not error and result:
+    if not error and result is not None:
         result = make_diet_diaries_dict(result, diet_diaries)
     else:
         error = True
