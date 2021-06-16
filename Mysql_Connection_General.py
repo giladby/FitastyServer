@@ -103,3 +103,9 @@ def check_existing(checking_query, val):
         result, found, error = check_query(cursor, checking_query, val)
     close_connection(conn, cursor)
     return result, found, error
+
+def get_prepared_string(size):
+    result = "%s"
+    for i in range(size - 1):
+        result += ", %s"
+    return result

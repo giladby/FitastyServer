@@ -1,6 +1,7 @@
+from Machine_Learning import get_last_record, append_new_rows, train_model_async
+from Main import samples_mutex
 from Mysql_Connection_General import *
 from Macros import *
-# from Machine_Learning import *
 
 # ======================================================================================================================
 # check_diet_diary QUERY
@@ -54,13 +55,8 @@ def insert_diet_diary_meal_query(cursor, diet_diary_id, meal_id):
 
     return cursor.lastrowid
 
-def insert_meal_dish_query(cursor, meal_public_id, dishes, dish_name, all_dishes):
+def insert_meal_dish_query(cursor, meal_public_id, dishes, dish_name):
     percent = dishes[dish_name]
-
-    total = percent
-    if dish_name in all_dishes:
-        total += all_dishes[dish_name]
-    all_dishes[dish_name] = total
 
     query = f"INSERT INTO {meal_dishes_table_mysql}" \
             f" ({meal_public_id_field_mysql},{dish_id_field_mysql},{dish_percent_field_mysql})" \
@@ -71,13 +67,8 @@ def insert_meal_dish_query(cursor, meal_public_id, dishes, dish_name, all_dishes
     cursor.execute(query, val)
     return cursor.rowcount == 0
 
-def insert_meal_ingredient_query(cursor, meal_public_id, ingredients, ingredient_name, all_ingredients):
+def insert_meal_ingredient_query(cursor, meal_public_id, ingredients, ingredient_name):
     amount = ingredients[ingredient_name]
-
-    total = amount
-    if ingredient_name in all_ingredients:
-        total += all_ingredients[ingredient_name]
-    all_ingredients[ingredient_name] = total
 
     query = f"INSERT INTO {meal_ingredients_table_mysql}" \
             f" ({meal_public_id_field_mysql},{ingredient_id_field_mysql},{ingredient_amount_field_mysql})" \
@@ -92,26 +83,33 @@ def insert_diet_diary_transaction_func(cursor, args):
     user_id = args[0]
     diet_diary_name = args[1]
     meals_dict = args[2]
-    error = False
-    # error, last_records = get_last_record(cursor, user_id)
-    all_dishes = {}
-    all_ingredients = {}
 
-    if error:
-        raise ValueError()
+    with samples_mutex:
+        error, last_records, columns_dict, columns = get_last_record(cursor, user_id)
+        all_dishes = set()
+        all_ingredients = set()
 
-    diet_diary_id = insert_main_diet_diary_query(cursor, diet_diary_name, user_id)
-    for meal_id in meals_dict:
-        meal_public_id = insert_diet_diary_meal_query(cursor, diet_diary_id, meal_id)
-        dishes, ingredients = meals_dict[meal_id]
-        for dish_name in dishes:
-            if insert_meal_dish_query(cursor, meal_public_id, dishes, dish_name, all_dishes):
-                raise ValueError()
-        for ingredient_name in ingredients:
-            if insert_meal_ingredient_query(cursor, meal_public_id, ingredients, ingredient_name, all_ingredients):
-                raise ValueError()
+        if error:
+            raise ValueError()
 
+        diet_diary_id = insert_main_diet_diary_query(cursor, diet_diary_name, user_id)
+        for meal_id in meals_dict:
+            meal_public_id = insert_diet_diary_meal_query(cursor, diet_diary_id, meal_id)
+            dishes, ingredients = meals_dict[meal_id]
+            for dish_name in dishes:
+                if insert_meal_dish_query(cursor, meal_public_id, dishes, dish_name):
+                    raise ValueError()
+            for ingredient_name in ingredients:
+                if insert_meal_ingredient_query(cursor, meal_public_id, ingredients, ingredient_name):
+                    raise ValueError()
+            all_dishes.update(dishes)
+            all_ingredients.update(ingredients)
 
+        if append_new_rows(cursor, last_records, columns_dict, columns, all_ingredients, all_dishes):
+            raise ValueError()
+
+    # train model in separated thread if mutex is available and return
+    train_model_async()
 
 def insert_diet_diary_query(conn, cursor, user_id, diet_diary_name, meals_dict):
     return transaction_execute(conn, cursor, insert_diet_diary_transaction_func,
@@ -433,7 +431,7 @@ def delete_diet_diary_main(cursor, diet_diary_name, user_id, all_diaries):
             f" WHERE {user_id_field_mysql} = %s"
     val = (user_id,)
     if not all_diaries:
-        query += "AND {diet_diary_name_field_mysql} = %s"
+        query += f" AND {diet_diary_name_field_mysql} = %s"
         val += (diet_diary_name,)
     cursor.execute(query, val)
 

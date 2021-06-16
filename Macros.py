@@ -8,10 +8,15 @@ mysql_password = "123456"
 #mysql_database = "fitasty"
 mysql_database = "fitasty_demo"
 
-samples_file_path = "samples.csv"
-
+# Utils Macros :
+error_value = -1
 name_exist_field_param = 'name_exist'
 found_field_param = 'found'
+
+# Machine Learning Macros :
+samples_file_path = 'DataFiles/samples.csv'
+model_file_path = 'DataFiles/model.sav'
+ingredient_label = 'ingredient_label'
 
 # Continents and Countries Macros :
 # Params :
@@ -104,6 +109,7 @@ dish_name_field_mysql = 'dish_name'
 dishes_table_mysql = 'dishes'
 
 ingredient_amount_field_mysql = 'ingredient_amount'
+total_ingredient_amount = f'total_{ingredient_amount_field_mysql}'
 dish_ingredients_table_mysql = 'dish_ingredients'
 
 # Diet Diaries Macros:

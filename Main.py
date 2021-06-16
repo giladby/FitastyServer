@@ -5,6 +5,7 @@ from threading import Lock
 port = 8080
 samples_mutex = Lock()
 model_mutex = Lock()
+training_model_mutex = Lock()
 
 def run():
     server_address = ('', port)

@@ -98,7 +98,7 @@ def server_get_diet_diaries(server):
 def server_delete_diet_diary(server):
     print("in delete_diet_diary")
     found = False
-    record = None
+    user_id = None
     diet_diary_name= None
     error = True
     code = HTTPStatus.OK
@@ -110,10 +110,9 @@ def server_delete_diet_diary(server):
     if not error:
         username = qs[username_field_param][0]
         diet_diary_name = qs[diet_diary_name_field_param][0]
-        record, found, error = check_diet_diary(diet_diary_name, username)
+        user_id, found, error = check_diet_diary(diet_diary_name, username)
 
     if not error and found:
-        user_id = record[f"{users_table_mysql}.{id_field_mysql}"]
         error = delete_diet_diary(diet_diary_name, user_id)
 
     if error:

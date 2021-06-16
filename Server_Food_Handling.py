@@ -1,5 +1,7 @@
 from Mysql_Food_Handling import *
 from urllib.parse import urlparse, parse_qs
+
+from Mysql_Users_Handling import check_user
 from Server_Utils import *
 from Macros import *
 from http import HTTPStatus
@@ -59,7 +61,7 @@ def check_get_foods_params(data):
         error = False
     return error
 
-def get_foods_by_data(data, include_dish, include_ingredient):
+def get_foods_by_data(data, include_dish, include_ingredient, user_id):
     begin_name = data[name_begin_field_param]
     fat = data[fat_field_param]
     carb = data[carb_field_param]
@@ -75,7 +77,7 @@ def get_foods_by_data(data, include_dish, include_ingredient):
     return get_filtered_foods(begin_name, fat, carb, fiber,
                               protein, is_vegan, is_vegetarian,
                               is_lactose_free, is_gluten_free, include_dish, include_ingredient,
-                              min_percent, max_percent)
+                              min_percent, max_percent, user_id)
 
 def server_get_foods(server):
     print("in get_foods")
@@ -84,11 +86,16 @@ def server_get_foods(server):
     data = None
     include_dish = False
     include_ingredient = False
+    found = False
+    username = None
+    user_id = None
 
     qs = parse_qs(urlparse(server.path).query)
-    if include_dish_field_param in qs and include_ingredient_field_param in qs and len(qs) == 2:
+    if include_dish_field_param in qs and include_ingredient_field_param in qs \
+            and username_field_param in qs and len(qs) == 3:
         include_dish = qs[include_dish_field_param][0]
         include_ingredient = qs[include_ingredient_field_param][0]
+        username = qs[username_field_param][0]
         error = False
         try:
             include_dish = convert_str_to_boolean(include_dish)
@@ -103,7 +110,11 @@ def server_get_foods(server):
         error = check_get_foods_params(data)
 
     if not error:
-        error, result = get_foods_by_data(data, include_dish, include_ingredient)
+        user_id, found, error = check_user(username, False, None)
+        error = error or not found
+
+    if not error and found:
+        error, result = get_foods_by_data(data, include_dish, include_ingredient, user_id)
 
     if not error:
         send_json(server, result)
