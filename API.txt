@@ -265,7 +265,7 @@ POST
 
 POST
 
-.../foods/get_foods?include_dishes=(boolean)&include_ingredients=(boolean)
+.../foods/get_foods?include_dishes=(boolean)&include_ingredients=(boolean)&username=(str)
 
 	input:
 		{

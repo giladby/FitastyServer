@@ -219,3 +219,4 @@ def server_get_ingredient_info(server):
     else:
         send_error(server,
                    HTTPStatus.NOT_FOUND.value if not error else HTTPStatus.BAD_REQUEST.value)
+
