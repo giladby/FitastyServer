@@ -325,5 +325,8 @@ def add_new_ingredient_column(ingredient_id):
     return error
 
 def train_model_async():
-    thread = Thread(target=train_model)
+    thread = Thread(target=train_model, args=(False, None))
     thread.start()
+
+def get_model_accuracy(accuracy_percent):
+    return train_model(True, accuracy_percent)

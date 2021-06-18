@@ -17,6 +17,7 @@ found_field_param = 'found'
 samples_file_path = 'DataFiles/samples.csv'
 model_file_path = 'DataFiles/model.sav'
 ingredient_label = 'ingredient_label'
+accuracy_percent_param = 'accuracy_percent'
 
 # Continents and Countries Macros :
 # Params :

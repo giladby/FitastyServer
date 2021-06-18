@@ -1,6 +1,7 @@
 from Mysql_Food_Handling import *
 from urllib.parse import urlparse, parse_qs
 
+from Machine_Learning import get_model_accuracy
 from Mysql_Users_Handling import check_user
 from Server_Utils import *
 from Macros import *
@@ -219,4 +220,35 @@ def server_get_ingredient_info(server):
     else:
         send_error(server,
                    HTTPStatus.NOT_FOUND.value if not error else HTTPStatus.BAD_REQUEST.value)
+
+# ======================================================================================================================
+# get_model_accuracy REQUEST
+
+def is_integer(string):
+    error = False
+    try:
+        string = int(string)
+    except:
+        error = True
+    return error, string
+
+def server_get_model_accuracy(server):
+    print("in get_model_accuracy")
+    accuracy = None
+    accuracy_percent = None
+
+    qs = parse_qs(urlparse(server.path).query)
+    error = len(qs) != 1 and accuracy_percent_param in qs
+
+    if not error:
+        accuracy_percent = qs[accuracy_percent_param][0]
+        error, accuracy_percent = is_integer(accuracy_percent)
+
+    if not error:
+        error, accuracy = get_model_accuracy(accuracy_percent)
+
+    if not error:
+        send_json(server, accuracy)
+    else:
+        send_error(server, HTTPStatus.BAD_REQUEST.value)
 

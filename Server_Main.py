@@ -28,6 +28,7 @@ class Server(BaseHTTPRequestHandler):
                 "/users/get_calorie_info": self.get_calorie_info,
                 "/foods/get_ingredient_info": self.get_ingredient_info,
                 "/foods/get_dish_info": self.get_dish_info,
+                "/foods/get_model_accuracy": self.get_model_accuracy,
                 "/diet_diaries/get_diet_diary": self.get_diet_diary,
                 "/diet_diaries/get_diet_diaries": self.get_diet_diaries}
 
@@ -49,6 +50,9 @@ class Server(BaseHTTPRequestHandler):
     def set_operations_dict_put(self):
         return {"/users/update_account": self.update_account,
                 "/diet_diaries/update_diet_diary": self.update_diet_diary}
+
+    def get_model_accuracy(self):
+        server_get_model_accuracy(self)
 
     def update_diet_diary(self):
         server_update_diet_diary(self)
