@@ -283,12 +283,16 @@ def get_new_ingredients_ids(cursor, ingredients, dishes):
     union = " UNION " if dishes and ingredients else ""
     ingredient_select = f"SELECT {id_field_mysql} FROM {food_ingredients_table_mysql}" \
                         f" WHERE {ingredient_name_field_mysql}" \
-                        f" IN ({get_prepared_string(len(ingredients) if ingredients else 0)})"
-    dish_select = f"SELECT {ingredient_id_field_mysql} FROM {dishes_table_mysql} JOIN {dish_ingredients_table_mysql}" \
+                        f" IN ({get_prepared_string(len(ingredients) if ingredients else 0)})" if ingredients else ""
+    dish_select = f"SELECT {ingredient_id_field_mysql} as {id_field_mysql} FROM {dishes_table_mysql}" \
+                  f" JOIN {dish_ingredients_table_mysql}" \
                   f" ON {dishes_table_mysql}.{id_field_mysql} = {dish_ingredients_table_mysql}.{dish_id_field_mysql}" \
-                  f" WHERE {dish_name_field_mysql} IN ({get_prepared_string(len(dishes) if dishes else 0)})"
+                  f" WHERE {dish_name_field_mysql} IN ({get_prepared_string(len(dishes) if dishes else 0)})"\
+                  if dishes else ""
 
     query = f"{ingredient_select}{union}{dish_select}"
+    print(query)
+    print(unioned_tuple)
     return mysql_getting_action(cursor, query, unioned_tuple, False)
 
 def append_new_rows(cursor, last_records, columns_dict, columns, ingredients, dishes):

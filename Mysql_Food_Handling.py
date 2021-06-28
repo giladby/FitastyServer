@@ -297,7 +297,7 @@ def get_filtered_dishes_query(cursor, begin_name, fat, carb, fiber, protein, is_
             handle_dish_record(dish, dishes_dict)
         filter_and_update_dishes(dishes_dict, is_vegan, is_vegetarian, is_lactose_free, is_gluten_free,
                                  min_percent, max_percent, required_dict, proba_dict)
-        dishes_dict = sorted(dishes_dict.items(), key=lambda dish_elem: dish_elem[1], reverse=True)
+        dishes_dict = sorted(dishes_dict.items(), key=lambda dish_elem: dish_elem[1][1], reverse=True)
 
     return error, dishes_dict, required_dict
 
