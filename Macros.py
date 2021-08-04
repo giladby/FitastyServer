@@ -1,12 +1,12 @@
 # Mysql General Macros :
-#mysql_host = "fitasty-db.cc4qtocqbg7k.us-east-2.rds.amazonaws.com"
-mysql_host = "127.0.0.1"
-#mysql_user = "admin"
-mysql_user = "root"
-#mysql_password = "epsilonEP2"
-mysql_password = "123456"
-#mysql_database = "fitasty"
-mysql_database = "fitasty_demo"
+mysql_host = "fitasty-db.cc4qtocqbg7k.us-east-2.rds.amazonaws.com"
+#mysql_host = "127.0.0.1"
+mysql_user = "admin"
+#mysql_user = "root"
+mysql_password = "epsilonEP2"
+#mysql_password = "123456"
+mysql_database = "fitasty"
+#mysql_database = "fitasty_demo"
 
 # Utils Macros :
 error_value = -1
