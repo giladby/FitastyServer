@@ -291,8 +291,6 @@ def get_new_ingredients_ids(cursor, ingredients, dishes):
                   if dishes else ""
 
     query = f"{ingredient_select}{union}{dish_select}"
-    print(query)
-    print(unioned_tuple)
     return mysql_getting_action(cursor, query, unioned_tuple, False)
 
 def append_new_rows(cursor, last_records, columns_dict, columns, ingredients, dishes):

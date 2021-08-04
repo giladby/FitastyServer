@@ -116,21 +116,17 @@ class Server(BaseHTTPRequestHandler):
             send_error(self, HTTPStatus.BAD_REQUEST.value)
 
     def do_GET(self):
-        print("in get")
         operations = self.operations_dict_get
         self.operate_by_operations_dict(operations)
 
     def do_POST(self):
-        print("in post")
         operations = self.operations_dict_post
         self.operate_by_operations_dict(operations)
 
     def do_PUT(self):
-        print("in put")
         operations = self.operations_dict_put
         self.operate_by_operations_dict(operations)
 
     def do_DELETE(self):
-        print("in put")
         operations = self.operations_dict_delete
         self.operate_by_operations_dict(operations)

@@ -3,7 +3,6 @@ from Macros import *
 from http import HTTPStatus
 
 def server_json_echo(server):
-    print("in json_echo")
 
     error, data = read_json_convert_to_dictionary(server)
 

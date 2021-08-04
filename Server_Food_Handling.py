@@ -26,7 +26,6 @@ def insert_dish_by_data(data):
     return insert_dish(name, ingredients, dishes)
 
 def server_insert_dish(server):
-    print("in insert_dish")
     found = False
 
     error, data = read_json_convert_to_dictionary(server)
@@ -81,7 +80,6 @@ def get_foods_by_data(data, include_dish, include_ingredient, user_id):
                               min_percent, max_percent, user_id)
 
 def server_get_foods(server):
-    print("in get_foods")
     error = True
     result = None
     data = None
@@ -155,7 +153,6 @@ def insert_ingredient_by_data(data):
                              is_lactose_free, serving)
 
 def server_insert_ingredient(server):
-    print("in insert_ingredient")
     found = False
 
     error, data = read_json_convert_to_dictionary(server)
@@ -179,7 +176,6 @@ def server_insert_ingredient(server):
 # get_dish_info REQUEST
 
 def server_get_dish_info(server):
-    print("in get_dish_info")
     error = True
     found = False
     result = None
@@ -202,7 +198,6 @@ def server_get_dish_info(server):
 # get_ingredient_info REQUEST
 
 def server_get_ingredient_info(server):
-    print("in get_ingredient_info")
     error = True
     found = False
     result = None
@@ -233,7 +228,6 @@ def is_integer(string):
     return error, string
 
 def server_get_model_accuracy(server):
-    print("in get_model_accuracy")
     accuracy = None
     accuracy_percent = None
 

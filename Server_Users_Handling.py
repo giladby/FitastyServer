@@ -8,7 +8,6 @@ from http import HTTPStatus
 # check_user REQUEST
 
 def server_check_username(server):
-    print("in check_username")
     error = True
     result = None
 
@@ -25,7 +24,6 @@ def server_check_username(server):
 # log_in REQUEST
 
 def server_log_in(server):
-    print("in log_in")
     error = True
     result = None
 
@@ -84,7 +82,6 @@ def check_insert_update_account_json_params(data):
     return error
 
 def server_insert_account(server):
-    print("in insert_account")
     found = False
 
     error, data = read_json_convert_to_dictionary(server)
@@ -141,7 +138,6 @@ def server_update_account(server):
 # delete_account REQUEST
 
 def server_delete_account(server):
-    print("in delete_account")
     found = False
     error = True
     user_id = None
@@ -169,7 +165,6 @@ def server_delete_account(server):
 # get_calorie_info REQUEST
 
 def server_get_calorie_info(server):
-    print("in get_calorie_info")
     error = True
     found = False
     result = None
@@ -189,7 +184,6 @@ def server_get_calorie_info(server):
 # get_account_info REQUEST
 
 def server_get_account_info(server):
-    print("in get_account_info")
     error = True
     found = False
     result = None

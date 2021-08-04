@@ -27,7 +27,6 @@ def insert_update_diet_diary_by_data(data, user_id, prev_diet_diary_name, insert
     return result
 
 def server_insert_diet_diary(server):
-    print("in insert_diet_diary")
     found = False
     qs = None
     user_id = None
@@ -96,7 +95,6 @@ def server_get_diet_diaries(server):
 # delete_diet_diary REQUEST
 
 def server_delete_diet_diary(server):
-    print("in delete_diet_diary")
     found = False
     user_id = None
     diet_diary_name= None
